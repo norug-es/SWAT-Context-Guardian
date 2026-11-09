@@ -27,11 +27,16 @@ if ($WithToasts) {
         if ($LASTEXITCODE -ne 0) { throw 'Fallo instalando winotify' }
     }
 }
-$Params = @( (Join-Path $Root 'control_center\server.py'), '--port', "$Port" )
+$Params = @( '--port', "$Port" )
 if ($Demo) { $Params += '--demo' }
 if ($WithToasts) { $Params += '--native-toasts' }
 if ($WithAppServer) { $Params += @('--appserver-url', 'ws://127.0.0.1:4500') }
 if ($TokenFile) { $Params += @('--appserver-token-file', $TokenFile) }
 if ($CodexCommand) { $Params += @('--codex-command', $CodexCommand) }
 Write-Host "Panel local: http://127.0.0.1:$Port"
-& $Python @Params
+Push-Location $Root
+try {
+    & $Python -m control_center.run @Params
+} finally {
+    Pop-Location
+}

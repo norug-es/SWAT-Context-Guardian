@@ -27,7 +27,10 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
 
-from .codex_appserver import CodexAppServerClient, CodexAppServerError
+try:
+    from .codex_appserver import CodexAppServerClient, CodexAppServerError
+except ImportError:  # Allows direct diagnostic execution of server.py.
+    from codex_appserver import CodexAppServerClient, CodexAppServerError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STATIC = Path(__file__).resolve().parent / 'static'
