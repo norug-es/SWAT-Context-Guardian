@@ -56,8 +56,8 @@ El botón **Consultar proveedores** ejecuta ese CLI. Consulta solo proveedores h
 
 - GET /intelligence — panel HTML sin CDN.
 - GET /api/intelligence?days=90 — datos agregados Codex.
-- GET /api/intelligence/ccusage — ejecuta ccusage únicamente al solicitarlo.
-- GET /api/intelligence/windows-providers — ejecuta Win-CodexBar CLI únicamente al solicitarlo.
+- POST /api/intelligence/ccusage — requiere token local y ejecuta ccusage solo por acción explícita.
+- POST /api/intelligence/windows-providers — requiere token local y ejecuta Win-CodexBar CLI solo por acción explícita.
 - GET /api/status y GET /api/codex/account — endpoints existentes, sin modificar su semántica.
 
 El servidor sigue enlazado a 127.0.0.1 mediante el lanzador existente. Los nuevos endpoints no modifican sesiones, configuraciones o procesos externos.
