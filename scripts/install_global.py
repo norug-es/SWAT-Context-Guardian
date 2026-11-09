@@ -39,7 +39,7 @@ def main() -> int:
         print(f"BACKUP={backup}")
     target.parent.mkdir(parents=True, exist_ok=True)
     try:
-        shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".venv", ".git", "*.sqlite3", "*.log"))
     except Exception:
         if target.exists():
             shutil.rmtree(target)

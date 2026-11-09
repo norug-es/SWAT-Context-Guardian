@@ -12,7 +12,7 @@
   **Global skill + local context monitor for Codex.**  
   *Approximate telemetry · Verifiable checkpoints · Safe handoffs across sessions and repositories.*
 
-  [![Version](https://img.shields.io/badge/version-v0.2.0-06b6d4?style=for-the-badge)](#project-status)
+  [![Version](https://img.shields.io/badge/version-v0.3.1-06b6d4?style=for-the-badge)](#project-status)
   [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Codex CLI](https://img.shields.io/badge/Codex-CLI-101827?style=for-the-badge&logo=openai&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
   [![Codex Desktop](https://img.shields.io/badge/Codex-Desktop-101827?style=for-the-badge&logo=openai&logoColor=white)](docs/INSTALAR_CODEX_DESKTOP.md)
@@ -24,9 +24,9 @@
   [![Windows](https://img.shields.io/badge/Windows-PowerShell-0078D4?logo=windows&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
   [![Linux](https://img.shields.io/badge/Linux-supported-FCC624?logo=linux&logoColor=black)](docs/INSTALAR_CODEX_CLI.md)
   [![Termux](https://img.shields.io/badge/Termux-supported-24292f?logo=android&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
-  [![Stdlib](https://img.shields.io/badge/Dependencies-stdlib%20only-225588?logo=python&logoColor=white)](#requirements)
+  [![Stdlib](https://img.shields.io/badge/CLI-stdlib%20only-225588?logo=python&logoColor=white)](#requirements)
   [![MCP](https://img.shields.io/badge/MCP-future%20integration-777777)](#roadmap)
-  [![Tests](https://img.shields.io/badge/Tests-7%20local-238636?logo=pytest&logoColor=white)](#tests)
+  [![Tests](https://img.shields.io/badge/Tests-15%20local-238636?logo=pytest&logoColor=white)](#tests)
 
   **[CLI installation](docs/INSTALAR_CODEX_CLI.md) · [Desktop installation](docs/INSTALAR_CODEX_DESKTOP.md) · [ChatGPT](docs/INSTALAR_CHATGPT.md) · [Architecture](docs/ARQUITECTURA.md)**
 
@@ -34,6 +34,37 @@
 </div>
 
 ---
+
+### 🆕 v0.3.1 · Unique sessions, verified state, and source history
+
+- **One thread ID = one session** in the dashboard even if several `rollout-*.jsonl` files share the same ID. Their paths remain available in **View history**.
+- The displayed context percentage comes from the **most recent valid measurement by timestamp**, not the historical maximum. File modification and token measurement times are shown separately.
+- **Verified active** requires a connected App Server reporting a fresh `active` status. **Recent** means file changes or observed events within 24 hours and **does not prove a running agent**; other entries are **Historical**.
+- By default, the overview displays only active and recent sessions. In the **Sessions** view, use filters for active, recent, historical, or all sessions.
+- Session details now include **View history**, **Copy path**, and **Open folder** (Windows only, explicit action constrained to `CODEX_HOME/sessions`). No JSONL files are modified.
+
+**Safe update from v0.3.0:** stop the previous server using `Ctrl+C`, extract v0.3.1 to a different directory, and run `start-control-center.ps1 -WithToasts` from the new folder. Do not delete `~/.codex/sessions/` or the SQLite history. This package does not automatically replace your globally installed skill or install a permanent service.
+
+## 🖥️ New in v0.3: SWAT Context Guardian Control Center
+
+![Control Center](https://img.shields.io/badge/Control_Center-Available-00b9c7?style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-Alerts-4169E1?logo=sqlite&logoColor=white) ![WebSocket](https://img.shields.io/badge/Codex_App_Server-Experimental_WebSocket-a78bfa) ![Windows Toast](https://img.shields.io/badge/Windows-Optional_Toasts-0078D4?logo=windows) ![Privacy](https://img.shields.io/badge/Sessions-Read_Only-16a34a)
+
+**Local dashboard at `http://127.0.0.1:8765`** with per-project sessions, approximate context occupancy, data-source status, alerts and metadata-only checkpoints. JSONL scanning works independently; an authenticated WebSocket link to Codex App Server is optional. It does not control external sessions, compact threads or run hourly backups.
+
+```powershell
+cd "$HOME\Downloads\swat-context-guardian"
+.\start-control-center.ps1                    # JSONL dashboard
+.\start-control-center.ps1 -WithToasts        # Native Windows popups
+.\start-control-center.ps1 -Demo -Port 8766   # Explicit simulation
+```
+
+For secure App Server token setup, follow **[the Control Center setup guide](docs/CONTROL_CENTER.md)** (Spanish, executable PowerShell commands). After starting Codex App Server yourself with `--ws-auth capability-token`:
+
+```powershell
+.\start-control-center.ps1 -WithAppServer -WithToasts -TokenFile "$HOME\.codex\context-guardian\ws-token.txt"
+```
+
+The monitor stays active while its backend process runs, even if the browser is closed. It does not automatically subscribe to conversations owned by other Codex applications; WebSocket integration must be verified against your installed Codex build.
 
 ## ✨ What is it?
 
@@ -49,7 +80,7 @@ The project combines **two separate components**:
 
 ### 🧩 Features and icons
 
-| Icon | Module | Purpose | v0.2 status |
+| Icon | Module | Purpose | v0.3 status |
 |:---:|---|---|---|
 | 🧭 | **Doctor** | Check Codex paths and session availability. | ✅ Implemented |
 | 📊 | **Status** | Show estimated context occupancy per session. | ✅ Implemented |
@@ -58,7 +89,7 @@ The project combines **two separate components**:
 | 🔁 | **Handoff** | Generate reviewable continuity Markdown. | ✅ Implemented |
 | 🛡️ | **Safety Guard** | Avoid accidental overwrites and preserve configuration backups. | ✅ Basic safeguards |
 | 🧠 | **Native Compaction** | Preview optional Codex compaction configuration. | ⚠️ Requires authorization and a compatible version |
-| 🔌 | **MCP / App Server** | Monitoring or control through a managed service. | 🗺️ Not implemented |
+| 🔌 | **App Server WS** | Read available metadata/events from a locally authenticated App Server. | ✅ Optional, experimental |
 | ☁️ | **ChatGPT** | Reusable instructions for reviewing supplied checkpoints. | 📄 Separate package; availability-dependent |
 
 ## 🚦 Context policy
@@ -108,14 +139,14 @@ flowchart TD
 
 ## 📦 Requirements
 
-- **Python 3.11+**, using only the standard library (`tomllib`, `argparse`, `json`, etc.).
+- **Python 3.11+**. The classic CLI monitor uses stdlib only; the dashboard installs FastAPI, Uvicorn and websockets into a separate virtual environment.
 - Codex CLI or Desktop with accessible local sessions **for monitoring**. A manual checkpoint can be created even without telemetry.
 - Read permission on `CODEX_HOME/sessions`, plus write permission on `CODEX_HOME/context-guardian` for the monitor's own reports.
-- No API keys, web services or mandatory Node.js dependencies.
+- The CLI needs no API keys, web services or Node.js. The optional dashboard uses localhost and a separately configured App Server token.
 
 ## 🚀 Quick installation (Windows PowerShell)
 
-1. Download and extract `SWAT-Context-Guardian-v0.2.0.zip`. It should contain a `swat-context-guardian/` directory.
+1. Download and extract `SWAT-Context-Guardian-v0.3.1-Control-Center.zip`. It should contain a `swat-context-guardian/` directory.
 2. Open PowerShell and run:
 
 ```powershell
@@ -163,7 +194,7 @@ When Codex Desktop and CLI run as the **same user with the same HOME**, they can
 
 ### ☁️ ChatGPT
 
-**Direct installation depends on your plan and workspace.** The original v0.2 documentation lists eligible ChatGPT **Business, Enterprise, Healthcare and Edu** workspaces. Do not assume that skill installation is available on Plus without checking the current product UI and documentation.
+**Direct installation depends on your plan and workspace.** The original v0.3 documentation lists eligible ChatGPT **Business, Enterprise, Healthcare and Edu** workspaces. Do not assume that skill installation is available on Plus without checking the current product UI and documentation.
 
 - **If Skills are available:** open `Plugins / Add-ons` → `Skills` → `Create` → `Upload from computer` (labels may differ). Use the **separate** `SWAT-Context-Guardian-ChatGPT-Skill.zip`, designed for continuity guidance **without a local process**.
 - **If Skills are unavailable:** create a ChatGPT Project, copy the instructions from [`docs/CHATGPT_PROJECT_INSTRUCTIONS.md`](docs/CHATGPT_PROJECT_INSTRUCTIONS.md), and supply checkpoints whenever you need a handoff.
@@ -277,7 +308,7 @@ swat-context-guardian/
 python -m unittest discover -s tests -v
 ```
 
-**Validation for this delivery:** seven unit tests in an isolated environment with simulated sessions. This **does not establish** compatibility with every Codex version or a successful installation on your computer.
+**Validation for this delivery:** 15 unit/integration tests in an isolated environment with simulated sessions. This **does not establish** compatibility with every Codex version or a successful installation on your computer.
 
 ## 🗺️ Roadmap
 
@@ -293,7 +324,7 @@ python -m unittest discover -s tests -v
 
 ## 📌 Project status
 
-**Local MVP v0.2.0.** Static badges describe the technologies and scope of this package; they **do not replace integration tests or prove compatibility with any particular client version**. Select and publish a distribution license in a `LICENSE` file before making open-source reuse claims.
+**Local MVP v0.3.1.** Static badges describe the technologies and scope of this package; they **do not replace integration tests or prove compatibility with any particular client version**. Select and publish a distribution license in a `LICENSE` file before making open-source reuse claims.
 
 ## 📚 Official references
 

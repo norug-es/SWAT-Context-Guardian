@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-VERSION = "0.1.0"
+VERSION = "0.3.1"
 THRESHOLDS = (60, 70, 80, 90)
 MAX_TAIL_BYTES = 4 * 1024 * 1024
 ACTIONS = {

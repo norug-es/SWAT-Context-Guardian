@@ -12,7 +12,7 @@
   **Skill global + supervisor local de contexto para Codex.**  
   *Telemetria aproximada · Checkpoints verificáveis · Transferências seguras entre sessões e repositórios.*
 
-  [![Versão](https://img.shields.io/badge/vers%C3%A3o-v0.2.0-06b6d4?style=for-the-badge)](#estado-do-projeto)
+  [![Versão](https://img.shields.io/badge/vers%C3%A3o-v0.3.1-06b6d4?style=for-the-badge)](#estado-do-projeto)
   [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Codex CLI](https://img.shields.io/badge/Codex-CLI-101827?style=for-the-badge&logo=openai&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
   [![Codex Desktop](https://img.shields.io/badge/Codex-Desktop-101827?style=for-the-badge&logo=openai&logoColor=white)](docs/INSTALAR_CODEX_DESKTOP.md)
@@ -24,9 +24,9 @@
   [![Windows](https://img.shields.io/badge/Windows-PowerShell-0078D4?logo=windows&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
   [![Linux](https://img.shields.io/badge/Linux-supported-FCC624?logo=linux&logoColor=black)](docs/INSTALAR_CODEX_CLI.md)
   [![Termux](https://img.shields.io/badge/Termux-supported-24292f?logo=android&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
-  [![Stdlib](https://img.shields.io/badge/Depend%C3%AAncias-apenas%20stdlib-225588?logo=python&logoColor=white)](#requisitos)
+  [![Stdlib](https://img.shields.io/badge/CLI-apenas%20stdlib-225588?logo=python&logoColor=white)](#requisitos)
   [![MCP](https://img.shields.io/badge/MCP-integra%C3%A7%C3%A3o%20futura-777777)](#roteiro-de-evolução)
-  [![Testes](https://img.shields.io/badge/Testes-7%20locais-238636?logo=pytest&logoColor=white)](#testes)
+  [![Testes](https://img.shields.io/badge/Testes-15%20locais-238636?logo=pytest&logoColor=white)](#testes)
 
   **[Instalação CLI](docs/INSTALAR_CODEX_CLI.md) · [Instalação Desktop](docs/INSTALAR_CODEX_DESKTOP.md) · [ChatGPT](docs/INSTALAR_CHATGPT.md) · [Arquitetura](docs/ARQUITECTURA.md)**
 
@@ -34,6 +34,37 @@
 </div>
 
 ---
+
+### 🆕 v0.3.1 · Sessões únicas, estado verificado e histórico
+
+- **Um ID de thread = uma sessão** no painel, mesmo quando vários ficheiros `rollout-*.jsonl` têm o mesmo identificador. Os caminhos continuam disponíveis em **Ver histórico**.
+- A percentagem apresentada usa **a medição válida mais recente pela data**, e não a percentagem histórica mais elevada. As datas da medição e da modificação do ficheiro são distintas.
+- **Ativa verificada** exige App Server ligado e um estado `active` recente. **Recente** significa ficheiro alterado ou evento observado nas últimas 24 horas e **não comprova execução**; as restantes são **Históricas**.
+- A vista geral mostra apenas sessões ativas e recentes por padrão. Em **Sessões** existem filtros para ativas, recentes, históricas e todas.
+- Os detalhes incluem **Ver histórico**, **Copiar caminho** e **Abrir pasta** (Windows, ação explícita limitada a `CODEX_HOME/sessions`). Os ficheiros JSONL não são alterados.
+
+**Atualização segura da v0.3.0:** pare o servidor anterior com `Ctrl+C`, extraia a v0.3.1 para outra pasta e execute `start-control-center.ps1 -WithToasts` a partir da nova versão. Não elimine `~/.codex/sessions/` nem o histórico SQLite. Esta atualização não substitui automaticamente a skill global nem instala um serviço permanente.
+
+## 🖥️ Novo na v0.3: SWAT Context Guardian Control Center
+
+![Control Center](https://img.shields.io/badge/Control_Center-Dispon%C3%ADvel-00b9c7?style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-Alertas-4169E1?logo=sqlite&logoColor=white) ![WebSocket](https://img.shields.io/badge/Codex_App_Server-WebSocket_experimental-a78bfa) ![Windows Toast](https://img.shields.io/badge/Windows-Notifica%C3%A7%C3%B5es_opcionais-0078D4?logo=windows) ![Privacy](https://img.shields.io/badge/Sess%C3%B5es-S%C3%B3_leitura-16a34a)
+
+**Painel local em `http://127.0.0.1:8765`** com sessões organizadas por projeto, percentagem aproximada de contexto, origem dos dados, alertas e checkpoints apenas de metadados. A leitura JSONL funciona de forma independente; a ligação WebSocket autenticada ao Codex App Server é opcional. Não controla sessões externas, não compacta conversas e não efetua backups horários.
+
+```powershell
+cd "$HOME\Downloads\swat-context-guardian"
+.\start-control-center.ps1                    # Painel JSONL
+.\start-control-center.ps1 -WithToasts        # Notificações Windows
+.\start-control-center.ps1 -Demo -Port 8766   # Simulação explícita
+```
+
+Para configurar o token do App Server, consulte **[o guia Control Center](docs/CONTROL_CENTER.md)** (em espanhol, com comandos PowerShell). Depois de iniciar o Codex App Server com `--ws-auth capability-token`:
+
+```powershell
+.\start-control-center.ps1 -WithAppServer -WithToasts -TokenFile "$HOME\.codex\context-guardian\ws-token.txt"
+```
+
+O monitor continua em execução enquanto o processo de backend estiver aberto, mesmo com o browser fechado. A integração WebSocket não recebe automaticamente os eventos de conversas pertencentes a outros clientes e requer validação com a sua versão do Codex.
 
 ## ✨ O que é?
 
@@ -49,7 +80,7 @@ O projeto reúne **dois componentes distintos**:
 
 ### 🧩 Funcionalidades e ícones
 
-| Ícone | Módulo | Função | Estado v0.2 |
+| Ícone | Módulo | Função | Estado v0.3 |
 |:---:|---|---|---|
 | 🧭 | **Doctor** | Verificar caminhos do Codex e disponibilidade de sessões. | ✅ Implementado |
 | 📊 | **Status** | Apresentar a ocupação estimada do contexto por sessão. | ✅ Implementado |
@@ -58,7 +89,7 @@ O projeto reúne **dois componentes distintos**:
 | 🔁 | **Handoff** | Gerar Markdown de continuidade para revisão. | ✅ Implementado |
 | 🛡️ | **Safety Guard** | Evitar substituições acidentais e preservar cópias de segurança da configuração. | ✅ Proteções básicas |
 | 🧠 | **Native Compaction** | Pré-visualizar a configuração opcional de compactação do Codex. | ⚠️ Exige autorização e uma versão compatível |
-| 🔌 | **MCP / App Server** | Monitorização ou controlo através de um serviço gerido. | 🗺️ Não implementado |
+| 🔌 | **App Server WS** | Consulta de metadados/eventos disponíveis num App Server local autenticado. | ✅ Opcional, experimental |
 | ☁️ | **ChatGPT** | Instruções reutilizáveis para rever checkpoints fornecidos. | 📄 Pacote separado; sujeito à disponibilidade |
 
 ## 🚦 Política de contexto
@@ -115,7 +146,7 @@ flowchart TD
 
 ## 🚀 Instalação rápida (Windows PowerShell)
 
-1. Transfira e extraia `SWAT-Context-Guardian-v0.2.0.zip`. No interior deverá existir a pasta `swat-context-guardian/`.
+1. Transfira e extraia `SWAT-Context-Guardian-v0.3.1-Control-Center.zip`. No interior deverá existir a pasta `swat-context-guardian/`.
 2. Abra o PowerShell e execute:
 
 ```powershell
@@ -163,7 +194,7 @@ Quando Codex Desktop e CLI forem executados com **o mesmo utilizador e a mesma H
 
 ### ☁️ ChatGPT
 
-**A instalação direta depende do seu plano e espaço de trabalho.** A documentação original da v0.2 enumera espaços de trabalho elegíveis de ChatGPT **Business, Enterprise, Healthcare e Edu**. Não se deve assumir que a instalação de skills está disponível no Plus sem verificar a interface e a documentação atuais.
+**A instalação direta depende do seu plano e espaço de trabalho.** A documentação original da v0.3 enumera espaços de trabalho elegíveis de ChatGPT **Business, Enterprise, Healthcare e Edu**. Não se deve assumir que a instalação de skills está disponível no Plus sem verificar a interface e a documentação atuais.
 
 - **Se as Skills estiverem disponíveis:** abra `Plugins / Complementos` → `Skills / Habilidades` → `Criar` → `Carregar do computador` (os nomes podem variar). Utilize o ZIP de skill **separado** `SWAT-Context-Guardian-ChatGPT-Skill.zip`, preparado para orientar a continuidade **sem processo local**.
 - **Se as Skills não estiverem disponíveis:** crie um Projeto do ChatGPT, copie as instruções de [`docs/CHATGPT_PROJECT_INSTRUCTIONS.md`](docs/CHATGPT_PROJECT_INSTRUCTIONS.md) e forneça os checkpoints quando necessitar de preparar uma transferência.
@@ -277,7 +308,7 @@ swat-context-guardian/
 python -m unittest discover -s tests -v
 ```
 
-**Validação desta entrega:** sete testes unitários num ambiente isolado, com sessões simuladas. Isto **não comprova** a compatibilidade com todas as versões do Codex nem a instalação efetiva no seu computador.
+**Validação desta entrega:** 15 testes unitários e de integração simulada num ambiente isolado, com sessões simuladas. Isto **não comprova** a compatibilidade com todas as versões do Codex nem a instalação efetiva no seu computador.
 
 ## 🗺️ Roteiro de evolução
 
@@ -286,14 +317,15 @@ python -m unittest discover -s tests -v
 - [x] Checkpoints JSON explícitos e transferências Markdown.
 - [x] Instalador conservador e testes unitários.
 - [x] Metadados e banner para o README / seletor de skills.
-- [ ] Integração nativa e verificada com Codex App Server e eventos de sessões geridas.
+- [x] Cliente WebSocket experimental para App Server (`initialize`, `thread/list`, notificações disponíveis), testado com servidor simulado.
+- [ ] Validar a integração com o executável real de Codex do utilizador.
 - [ ] Serviço persistente opcional para Windows/systemd, com instalação e remoção seguras.
 - [ ] API/MCP de métricas sanitizadas com autenticação e permissões, se autorizado.
 - [ ] Integração supervisionada com ChatGPT através de um conector aprovado.
 
 ## 📌 Estado do projeto
 
-**MVP local v0.2.0.** Os badges estáticos descrevem as tecnologias e o âmbito do pacote; **não substituem testes de integração nem comprovam a compatibilidade com uma versão concreta do cliente**. É necessário escolher e publicar uma licença de distribuição num ficheiro `LICENSE` antes de afirmar condições de reutilização open source.
+**MVP local v0.3.1.** Os badges estáticos descrevem as tecnologias e o âmbito do pacote; **não substituem testes de integração nem comprovam a compatibilidade com uma versão concreta do cliente**. É necessário escolher e publicar uma licença de distribuição num ficheiro `LICENSE` antes de afirmar condições de reutilização open source.
 
 ## 📚 Referências oficiais
 

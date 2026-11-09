@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SWAT Context Guardian · Control Center</title>
+<style>
+:root{color-scheme:dark;--bg:#070c14;--panel:#0d1724;--panel2:#101d2c;--line:#263247;--text:#eaf5ff;--muted:#8a9cb0;--cyan:#4cdae5;--cyan2:#13a8bd;--pink:#e46a98;--amber:#e5b257;--green:#5ad7ae;--shadow:0 20px 80px #0006}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 60% -5%,#17364f55 0%,transparent 32%),radial-gradient(ellipse at 100% 80%,#37205145,transparent 42%),var(--bg);font-family:Inter,Segoe UI,-apple-system,BlinkMacSystemFont,Arial,sans-serif;color:var(--text);min-height:100vh}body:before{content:"";pointer-events:none;position:fixed;inset:0;background-image:linear-gradient(#ffffff04 1px,transparent 1px),linear-gradient(90deg,#ffffff04 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,#0008,transparent 75%)}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.48;cursor:default}a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}.app{max-width:1600px;margin:auto;display:grid;grid-template-columns:234px minmax(0,1fr);min-height:100vh}.side{position:sticky;top:0;align-self:start;height:100vh;border-right:1px solid #26384b80;padding:25px 17px;background:#080f19e0;backdrop-filter:blur(16px);display:flex;flex-direction:column;gap:25px}.brand{display:flex;align-items:center;gap:10px;margin:2px 6px 8px}.brand-logo{display:grid;place-items:center;width:41px;height:41px;border-radius:13px;background:linear-gradient(135deg,#184b5b,#10223e);border:1px solid #4ae0ec65;color:#6ff3ff;box-shadow:0 0 24px #00ddff24;font-size:22px}.brand-text{font-size:14px;letter-spacing:.07em;font-weight:800;line-height:1.25}.brand-text small{display:block;font-size:10px;color:#84aab9;letter-spacing:.17em;margin-top:3px}.nav-label{color:#71869b;font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:0 12px;margin:14px 0 10px}.nav-item{width:100%;display:flex;gap:12px;align-items:center;border:1px solid transparent;background:transparent;color:#92a6bd;border-radius:11px;text-align:left;padding:12px 12px;font-size:13px;font-weight:600;margin:4px 0}.nav-item svg{height:17px;width:17px;stroke:currentColor;fill:none;stroke-width:1.8}.nav-item:hover{background:#102436}.nav-item.active{background:linear-gradient(90deg,#0b465159,#10334522);border-color:#308c954f;color:#75e8f1}.side-spacer{flex:1}.side-foot{border:1px solid #234054;border-radius:13px;background:linear-gradient(140deg,#102a37,#0d1723);padding:13px;font-size:11px;line-height:1.55;color:#8ca8b8}.tiny-pill{display:inline-flex;align-items:center;gap:6px;background:#173242;color:#7dd4e0;padding:4px 8px;border:1px solid #2b7280;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.03em}.main{min-width:0;padding:28px clamp(18px,3vw,45px) 60px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}.eyebrow{font-size:11px;color:#6ad8e4;letter-spacing:.15em;text-transform:uppercase;font-weight:800}.topbar h1{font-size:clamp(24px,2.6vw,34px);line-height:1.13;margin:6px 0 0;letter-spacing:-.045em}.meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.badge{border-radius:999px;padding:7px 11px;border:1px solid #2b3c50;color:#b7c7d5;background:#0f1927;font-size:11px;display:inline-flex;gap:7px;align-items:center;white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:#667689;display:inline-block;box-shadow:0 0 0 3px #6676891b}.dot.good{background:#60deb1;box-shadow:0 0 0 3px #60deb124}.dot.warn{background:#f5c374}.hero{border:1px solid #294157;border-radius:20px;background:linear-gradient(105deg,#112d3a 0%,#12253d 40%,#101a2c 80%);box-shadow:var(--shadow);position:relative;overflow:hidden;padding:22px 28px;display:flex;align-items:center;min-height:154px;margin-bottom:23px}.hero:before{content:"";position:absolute;right:80px;top:-60px;width:300px;height:260px;background:radial-gradient(circle,#1ae3e24a,transparent 63%);filter:blur(35px)}.hero:after{content:"◉";position:absolute;right:50px;top:-50px;font-size:260px;color:#5bdef519;line-height:1}.hero div{position:relative;z-index:1;max-width:640px}.hero .version{font-size:11px;letter-spacing:.15em;font-weight:800;color:#7ce4f6}.hero h2{margin:7px 0 7px;font-size:clamp(22px,2.6vw,34px);letter-spacing:-.04em}.hero h2 em{font-style:normal;color:#78eaf2}.hero p{color:#a9c0d2;max-width:570px;font-size:13px;line-height:1.6;margin:0}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}.stat{background:linear-gradient(165deg,#101c2b,#0c1522);border:1px solid #27364b;border-radius:15px;padding:18px 19px;position:relative;overflow:hidden}.stat:before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--shade),transparent)}.stat small{display:block;font-size:11px;color:#92a6ba;font-weight:600}.stat strong{display:block;font-size:30px;letter-spacing:-.05em;margin:10px 0 2px}.stat .hint{color:#62778f;font-size:10px}.content-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:18px}.panel{border:1px solid #29384b;border-radius:17px;background:linear-gradient(170deg,#101b29ee,#0b1422f2);padding:19px;min-width:0;box-shadow:0 10px 50px #0002}.panel h3{font-size:15px;margin:0 0 5px;letter-spacing:-.01em}.sub{color:#7890a8;font-size:11px;line-height:1.5}.heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.toolbar{display:flex;gap:7px;flex-wrap:wrap}.small-btn{border:1px solid #2c4658;background:#152536;border-radius:9px;color:#abcddd;padding:8px 11px;font-size:11px;font-weight:700}.small-btn:hover{border-color:#4cabb6;color:#e6fdff}.select{background:#101e2c;color:#b1d5e2;border:1px solid #345062;border-radius:9px;padding:8px 9px;font-size:11px;max-width:180px}.project{background:#0d1826;border:1px solid #25354a;border-radius:13px;padding:16px;margin-bottom:10px;transition:border-color .15s}.project:hover{border-color:#377a8c}.project-head{display:flex;justify-content:space-between;gap:8px;align-items:start}.project-name{font-size:13px;font-weight:800;word-break:break-word}.project-path{font-size:10px;color:#6c869d;margin:5px 0 12px;word-break:break-all}.project-count{font-size:10px;color:#8fa5b7}.progress{height:7px;background:#233147;border-radius:99px;overflow:hidden;position:relative;margin:7px 0 7px}.bar{height:100%;border-radius:99px;background:linear-gradient(90deg,#177a8a,#5bdde8);width:0}.bar.warn{background:linear-gradient(90deg,#a67c27,#f4c468)}.bar.high{background:linear-gradient(90deg,#bb4a6e,#f783b4)}.project-foot{display:flex;align-items:center;justify-content:space-between;color:#708ba2;font-size:10px}.percent{font-size:16px;font-weight:900;color:#e5f9ff}.session-row{display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid #203042;padding:9px 0 0;margin-top:9px}.session-label{display:flex;gap:7px;align-items:center;min-width:0;color:#92a5b9;font-size:11px}.session-id{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}.session-percent{font-size:11px;color:#a4f4fb;font-variant-numeric:tabular-nums}.session-details{border:1px solid #224755;background:#112534;color:#9cdae6;border-radius:7px;padding:5px 8px;font-size:10px}.sidebar-panel{display:flex;flex-direction:column;gap:17px}.alert{display:flex;gap:11px;background:#111d2b;border:1px solid #324357;border-radius:12px;padding:12px 13px;margin-bottom:8px}.alert-dot{width:31px;height:31px;display:grid;place-items:center;flex-shrink:0;background:#193e4b;border:1px solid #236877;border-radius:9px;color:#65e9f4;font-weight:800;font-size:12px}.alert-dot.warn{background:#49351c;color:#f5ca7d;border-color:#765c34}.alert-dot.high{background:#4c2239;color:#ff98bf;border-color:#844265}.alert-head{display:flex;justify-content:space-between;gap:4px}.alert-head strong{font-size:11px}.alert-head span{font-size:9px;color:#6d8196}.alert p{font-size:10px;color:#9ab0c2;line-height:1.55;margin:5px 0 0;word-break:break-word}.muted{color:#7791a5;font-size:12px;line-height:1.65}.empty{border:1px dashed #274052;padding:28px;border-radius:12px;color:#8198af;text-align:center;font-size:12px;line-height:1.7}.status-row{border-bottom:1px solid #263349;padding:11px 0;display:flex;justify-content:space-between;gap:10px;font-size:11px}.status-row:last-child{border-bottom:0}.status-row span{color:#8296a8}.status-row b{font-weight:700;text-align:right;max-width:65%;word-break:break-word}.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.bottom-grid .panel{min-height:145px}.check-row{display:flex;gap:12px;align-items:start;padding:9px 0;border-bottom:1px solid #203042;font-size:12px}.check-row:last-child{border:0}.check-icon{color:#54d2c2;font-size:15px}.check-row small{display:block;margin-top:3px;color:#7892a5;font-size:10px;line-height:1.5}.activity-steps{display:flex;gap:7px;justify-content:space-between;align-items:center;margin-top:16px}.step{flex:1;border:1px solid #3b4d5d;background:#182536;border-radius:10px;text-align:center;padding:14px 7px}.step strong{display:block;font-size:22px;color:#e9faff}.step small{display:block;color:#96aabf;margin-top:5px;font-size:9px}.step:nth-child(1){border-color:#23667d}.step:nth-child(2){border-color:#78643e}.step:nth-child(3){border-color:#a5703c}.step:nth-child(4){border-color:#793956}.modal-bg{position:fixed;inset:0;background:#000a;z-index:10;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(7px)}.modal-bg.open{display:flex}.modal{max-width:640px;width:100%;border:1px solid #4b7484;background:#111d2b;border-radius:18px;padding:23px;box-shadow:0 25px 100px #000e}.modal h3{margin:0 0 15px}.detail{display:grid;grid-template-columns:145px 1fr;gap:10px;font-size:12px;margin-bottom:18px}.detail dt{color:#7992a6}.detail dd{margin:0;word-break:break-word;color:#dceaf4}.modal-actions{display:flex;justify-content:flex-end;gap:10px}.action{background:linear-gradient(100deg,#198d9c,#166377);border:1px solid #5cd6e0;color:white;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:800}.action.secondary{background:#1c293b;border-color:#425b70;color:#b4cddd}.toast{position:fixed;right:22px;bottom:22px;padding:13px 17px;border-radius:12px;background:#132f3c;border:1px solid #43aabd;color:#d3f8fa;max-width:360px;box-shadow:var(--shadow);z-index:20;display:none;font-size:12px;line-height:1.5}.toast.show{display:block}.note{font-size:10px;color:#6e879c;line-height:1.5}.foot{margin-top:25px;text-align:center;font-size:10px;color:#5e7488}.only-panel{display:none}.only-panel.active{display:block}#view-overview.hidden{display:none}@media(max-width:1100px){.content-grid{grid-template-columns:1fr}.sidebar-panel{display:grid;grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:800px){.app{display:block}.side{height:auto;position:static;padding:12px;flex-direction:row;flex-wrap:wrap;gap:8px;align-items:center}.brand{margin:0 auto 0 0}.side nav{display:flex;flex-wrap:wrap}.nav-label,.side-foot,.side-spacer{display:none}.nav-item{width:auto;margin:0;padding:9px}.nav-item svg{display:none}.main{padding:18px}.topbar{flex-direction:column;align-items:start}.sidebar-panel,.bottom-grid{grid-template-columns:1fr}.hero:after{display:none}}@media(max-width:460px){.stats{gap:8px}.stat{padding:12px}.stat strong{font-size:25px}.heading{flex-direction:column;align-items:start}.project-head{align-items:start}.detail{grid-template-columns:1fr;gap:4px}}
+.session-v031{align-items:flex-start}.session-identity{display:flex;flex-direction:column;gap:5px;min-width:0}.session-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:10px;color:#9caec1}.activity-pill{border-radius:30px;padding:3px 7px;background:#19283b;border:1px solid #44566b;color:#b7c5d7;font-size:10px;white-space:nowrap}.activity-pill.active{color:#66eac0;border-color:#36a98660;background:#13574626}.activity-pill.recent{color:#ffda9b;border-color:#af854359;background:#76501a32}.activity-pill.historical{color:#b2bccc;border-color:#526174;background:#25314344}.source-history{max-height:220px;overflow-y:auto;margin:14px 0;border:1px solid var(--line);border-radius:9px;padding:10px}.source-history[hidden]{display:none}.history-explain{margin:0 0 8px;color:var(--muted);font-size:12px}.history-entry{border-top:1px solid #253347;padding:9px 0}.history-path{font-family:Consolas,monospace;font-size:11px;overflow-wrap:anywhere;color:#a7d9e3}.history-meta{color:var(--muted);font-size:11px;margin-top:3px}.modal{max-height:94vh;overflow-y:auto;max-width:750px}.modal-actions{flex-wrap:wrap}.session-row .session-label{min-width:0}.session-row .session-id{overflow-wrap:anywhere}
+</style>
+</head><body>
+<div class="app">
+<aside class="side"><div class="brand"><div class="brand-logo">⬡</div><div class="brand-text">SWAT CONTEXT <small>GUARDIAN SYSTEM</small></div></div><nav><div class="nav-label">COMMAND CENTER</div><button class="nav-item active" data-view="overview"><span>◈</span> Vista general</button><button class="nav-item" data-view="sessions"><span>▤</span> Sesiones</button><button class="nav-item" data-view="alerts"><span>◉</span> Centro de alertas</button><button class="nav-item" data-view="checkpoints"><span>▣</span> Checkpoints</button><button class="nav-item" data-view="connection"><span>◎</span> Conexión Codex</button></nav><div class="side-spacer"></div><div class="side-foot"><span class="tiny-pill"><i class="dot good"></i> CONTROL LOCAL</span><p style="margin:10px 0 0">Observabilidad de Codex sin modificar hilos, procesos ni configuración. Los porcentajes son estimaciones.</p></div></aside>
+<main class="main"><div class="topbar"><div><div class="eyebrow">SESSION INTELLIGENCE / SWAT</div><h1>Control Center <span style="color:#6b8a9f;font-weight:400">/</span> <span id="page-title">Overview</span></h1></div><div class="meta"><span class="badge"><i class="dot good"></i> Monitor local</span><span class="badge" id="mode-badge">Cargando...</span><span class="badge" id="clock">—</span></div></div>
+<div id="view-overview">
+<section class="hero"><div><div class="version">CONTEXT GUARDIAN · v0.3.1</div><h2>La inteligencia necesita <em>continuidad.</em></h2><p>Supervisa el contexto de tus agentes, visualiza todas tus sesiones y anticipa los puntos de compactación y relevo, sin interrumpir el trabajo.</p></div></section>
+<div class="stats"><div class="stat" style="--shade:#42d4e6"><small>Sesiones únicas</small><strong id="count-sessions">—</strong><span class="hint">IDs consolidados, no procesos</span></div><div class="stat" style="--shade:#6c9bfc"><small>Proyectos</small><strong id="count-projects">—</strong><span class="hint">Workspaces identificados</span></div><div class="stat" style="--shade:#e6b35d"><small>Máximo reciente</small><strong id="max-context">—</strong><span class="hint">Excluye sesiones históricas</span></div><div class="stat" style="--shade:#cf75e1"><small>Alertas guardadas</small><strong id="count-alerts">—</strong><span class="hint">Cruces desde que monitorizas</span></div></div>
+<div class="content-grid"><section class="panel"><div class="heading"><div><h3>Proyectos supervisados</h3><div class="sub">Sesiones activas o con registro en las últimas 24 horas</div></div><div class="toolbar"><select id="filter" class="select" aria-label="Filtrar proyectos"><option value="recent" selected>Recientes (24 h)</option><option value="active">Activas verificadas</option><option value="risk">≥ 60% de contexto</option><option value="historical">Solo históricos</option><option value="all">Todos los proyectos</option></select><button id="refresh" class="small-btn">↻ Actualizar</button></div></div><p class="note" id="activity-summary" aria-live="polite">Clasificando registros...</p><div id="projects" class="project-list"><div class="empty">Cargando sesiones locales...</div></div></section>
+<div class="sidebar-panel"><section class="panel"><div class="heading"><div><h3>Alertas recientes</h3><div class="sub">Cambios de nivel, no notificaciones repetitivas</div></div><span class="tiny-pill">MONITOR</span></div><div id="alerts-preview"><div class="empty">Sin alertas registradas</div></div></section><section class="panel"><div class="heading"><div><h3>Conexiones</h3><div class="sub">Estado de las fuentes de telemetría</div></div></div><div class="status-row"><span>Codex JSONL</span><b style="color:#5bdbb0" id="jsonl-state">Consultando</b></div><div class="status-row"><span>Codex App Server</span><b id="ws-state">No configurado</b></div><div class="status-row"><span>Popup de Windows</span><b id="notify-state">Desactivado</b></div><div class="status-row"><span>Último evento en vivo</span><b id="ws-last">—</b></div><div style="padding-top:15px"><button id="test-popup" class="small-btn" style="width:100%">♧ Probar notificación nativa</button><button id="browser-popup" class="small-btn" style="width:100%;margin-top:7px">♧ Activar avisos del navegador</button></div></section></div></div>
+<div class="bottom-grid"><section class="panel"><div class="heading"><div><h3>Política de contexto</h3><div class="sub">Umbrales informativos por sesión</div></div></div><div class="activity-steps"><div class="step"><strong>60%</strong><small>Alerta</small></div><div class="step"><strong>70%</strong><small>Checkpoint</small></div><div class="step"><strong>80%</strong><small>Compactar*</small></div><div class="step"><strong>90%</strong><small>Relevo</small></div></div><p class="note">*El panel no compacta automáticamente. Solo recomienda verificar la política nativa de Codex.</p></section><section class="panel"><div class="heading"><div><h3>Protección de sesiones</h3><div class="sub">Compromisos del monitor</div></div></div><div class="check-row"><div class="check-icon">✓</div><div>Modo solo lectura para sesiones Codex<small>No modifica procesos ni conversaciones.</small></div></div><div class="check-row"><div class="check-icon">✓</div><div>Telemetría local protegida<small>SQLite solo para metadatos y alertas.</small></div></div><div class="check-row"><div class="check-icon">✓</div><div>Checkpoints bajo demanda<small>Guardan metadatos; no hacen copias del código ni de chats.</small></div></div></section></div>
+</div>
+<div id="view-sessions" class="only-panel"><section class="panel"><div class="heading"><div><h3>Sesiones por proyecto</h3><div class="sub">Un ID = una sesión · Actividad verificada únicamente por App Server conectado</div></div><div class="toolbar"><span id="session-filter-count" class="tiny-pill">—</span><select id="session-filter" class="select" aria-label="Filtrar sesiones"><option value="current" selected>Activas y recientes</option><option value="active">Activas verificadas</option><option value="recent">Recientes no verificadas</option><option value="historical">Históricas</option><option value="all">Todas</option></select></div></div><div id="all-sessions"></div></section></div>
+<div id="view-alerts" class="only-panel"><section class="panel"><div class="heading"><div><h3>Histórico de alertas</h3><div class="sub">Se registran solamente nuevos cruces de umbral observados</div></div></div><div id="alerts-full"></div></section></div>
+<div id="view-checkpoints" class="only-panel"><section class="panel"><div class="heading"><div><h3>Checkpoints locales</h3><div class="sub">Guardan metadata de sesión, Git y campos vacíos para la skill</div></div></div><div id="checkpoint-list"></div><p class="note">Para añadir decisiones verificadas y generar un relevo, usa la skill $swat-context-guardian o los comandos guardian.py checkpoint y handoff.</p></section></div>
+<div id="view-connection" class="only-panel"><section class="panel"><div class="heading"><div><h3>Codex App Server</h3><div class="sub">Telemetría activa de los hilos visibles para esta conexión</div></div></div><div id="connection-details"></div><p class="note">Una conexión nueva no se suscribe automáticamente a los turnos de otras aplicaciones. El monitor no usa thread/resume para no alterar la sesión.</p></section></div>
+<p class="foot">SWAT Context Guardian · Solo localhost · Datos reales o modo demo expresamente identificado · Sin acceso a producción</p></main></div>
+<div class="modal-bg" id="modal" role="dialog" aria-modal="true" aria-label="Detalles de sesión"><div class="modal"><h3>Ficha de sesión</h3><dl class="detail" id="detail"></dl><div id="source-history" class="source-history" hidden></div><div class="modal-actions"><button class="action secondary" id="history-btn">Ver historial</button><button class="action secondary" id="copy-path-btn">Copiar ruta</button><button class="action secondary" id="open-folder-btn">Abrir carpeta</button><button class="action secondary" id="close-modal">Cerrar</button><button class="action" id="checkpoint-btn">Checkpoint</button></div></div></div><div id="toast" class="toast" role="status"></div>
+<script>
+const $=id=>document.getElementById(id);
+let state=null,alerts=[],checkpoints=[],selectedId=null,currentView='overview',alertCursor=0,browserNotify=false,historyShown=false;
+const safeText=v=>String(v??'—');
+const shortPath=p=>!p?'Sin proyecto':p.replaceAll('\\','/').split('/').filter(Boolean).pop()||p;
+const fmt=n=>n==null?'—':new Intl.NumberFormat('es-ES').format(n);
+const risk=n=>n>=80?'high':n>=60?'warn':'';
+const when=iso=>{if(!iso)return '—';let d=new Date(iso);return isNaN(d.valueOf())?'—':d.toLocaleString('es-ES',{dateStyle:'short',timeStyle:'short'});};
+const activity=s=>s.activity_category||'historical';
+const categories={active:'Activa verificada',recent:'Reciente · no verificada',historical:'Histórica'};
+function node(tag,className,text){const n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=safeText(text);return n;}
+function clear(el){el.replaceChildren();}
+function message(str){const t=$('toast');t.textContent=str;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),4000);}
+function empty(msg){return node('div','empty',msg);}
+function groupSessions(sessions){
+  const g=new Map();
+  for(const s of sessions){const k=s.project||'Sin proyecto';if(!g.has(k))g.set(k,[]);g.get(k).push(s);}
+  return [...g.entries()].map(([name,list])=>({name,list,pct:Math.max(-1,...list.map(s=>s.percent_approx??-1)),
+    active:list.some(s=>activity(s)==='active'),recent:list.some(s=>activity(s)==='recent'),
+    historical:list.every(s=>activity(s)==='historical')}))
+    .sort((a,b)=>(Number(b.active)-Number(a.active))||(Number(b.recent)-Number(a.recent))||(b.pct-a.pct));
+}
+function badge(s){return node('span','activity-pill '+activity(s),categories[activity(s)]||'Sin verificar');}
+function sessionNode(s){
+  const r=node('div','session-row session-v031'),left=node('div','session-label'),identity=node('div','session-identity');
+  identity.append(node('span','session-id',s.session_id));
+  const meta=node('div','session-meta');meta.append(badge(s));
+  meta.append(node('span','',`Último registro: ${when(s.last_activity_at)}`));
+  if((s.source_file_count||0)>1)meta.append(node('span','',`${s.source_file_count} archivos asociados`));
+  identity.append(meta);left.append(node('i','dot '+(s.active_verified?'good':'')),identity);r.append(left);
+  const right=node('div','toolbar');right.append(node('span','session-percent',s.percent_approx==null?'Sin medición':s.percent_approx.toFixed(1)+'%'));
+  const btn=node('button','session-details','Ver');btn.onclick=()=>showDetail(s);right.append(btn);r.append(right);return r;
+}
+function projectNode(p,all=false){
+  const root=node('div','project'),top=node('div','project-head'),name=node('div');
+  name.append(node('div','project-name',shortPath(p.name)),node('div','project-path',p.name));
+  const fileCount=p.list.reduce((acc,s)=>acc+(s.source_file_count||0),0);
+  const count=node('span','project-count',`${p.list.length} sesiones · ${fileCount} archivos`);
+  top.append(name,count);root.append(top);
+  const prog=node('div','progress'),bar=node('div','bar '+risk(p.pct));bar.style.width=(p.pct<0?0:Math.min(100,p.pct))+'%';prog.append(bar);root.append(prog);
+  const foot=node('div','project-foot');const status=p.active?'● Actividad verificada por App Server':p.recent?'◐ Registros recientes, actividad no verificada':'○ Solo histórico';
+  foot.append(node('span','',status),node('span','percent',p.pct<0?'N/D':p.pct.toFixed(1)+'%'));root.append(foot);
+  const limit=all?p.list.length:2;
+  for(const s of p.list.slice(0,limit))root.append(sessionNode(s));
+  if(!all&&p.list.length>limit)root.append(node('div','note',`+ ${p.list.length-limit} sesiones disponibles en la pestaña Sesiones`));
+  return root;
+}
+function alertNode(a){
+  const box=node('div','alert'),pill=node('div','alert-dot '+risk(a.tier),a.tier+'%'),body=node('div');body.style.flex='1';
+  const h=node('div','alert-head');h.append(node('strong','',shortPath(a.project)),node('span','',when(a.at)));
+  const desc=node('p','',`${a.percent.toFixed(1)}% de contexto · ${a.tier===60?'Alerta':a.tier===70?'Preparar checkpoint':a.tier===80?'Revisar compactación':'Preparar relevo'}`);
+  body.append(h,desc);box.append(pill,body);return box;
+}
+function render(){
+  if(!state)return;
+  const sessions=state.sessions||[],grouped=groupSessions(sessions),counts=state.activity_counts||{};
+  $('count-sessions').textContent=fmt(state.session_count);$('count-projects').textContent=fmt(state.project_count);
+  $('max-context').textContent=state.max_current_percent==null?'—':state.max_current_percent.toFixed(1)+'%';
+  $('count-alerts').textContent=fmt(alerts.length);
+  $('mode-badge').textContent=state.mode==='DEMO (simulado)'?'◈ DEMO · SIMULADO':'◈ SOLO LECTURA';
+  $('clock').textContent=new Date().toLocaleTimeString('es-ES');
+  $('jsonl-state').textContent=state.scan_error?'Error de lectura':'Lectura local';
+  $('ws-state').textContent=!state.appserver.configured?'No configurado':state.appserver.connected?'● Conectado':'○ Desconectado';
+  $('ws-state').style.color=state.appserver.connected?'#62ddb4':'#a6aebd';
+  $('ws-last').textContent=when(state.appserver.last_event);
+  $('notify-state').textContent=state.notifications.native_available?'Activado':state.notifications.native_enabled?'No disponible':'Desactivado';
+  $('test-popup').disabled=!state.notifications.native_available;
+  $('activity-summary').textContent=`${counts.active||0} activas verificadas · ${counts.recent||0} recientes no verificadas · ${counts.historical||0} históricas · ${state.file_count||0} archivos de origen`;
+  const overFilter=$('filter').value;
+  let filtered=grouped;
+  if(['recent','active','historical'].includes(overFilter)){
+    filtered=grouped.map(g=>{
+      const list=g.list.filter(s=>overFilter==='recent'?activity(s)!=='historical':activity(s)===overFilter);
+      return {...g,list,pct:Math.max(-1,...list.map(s=>s.percent_approx??-1)),
+        active:list.some(s=>activity(s)==='active'),recent:list.some(s=>activity(s)==='recent'),
+        historical:list.every(s=>activity(s)==='historical')};
+    }).filter(g=>g.list.length>0);
+  } else if(overFilter==='risk') filtered=grouped.filter(g=>g.pct>=60);
+  clear($('projects'));
+  if(!filtered.length)$('projects').append(empty('No hay sesiones recientes verificables. Consulta «Sesiones» para ver el histórico.'));
+  else for(const p of filtered)$('projects').append(projectNode(p));
+  const allFilter=$('session-filter').value;
+  const selected=allFilter==='all'?sessions:sessions.filter(s=>allFilter==='current'?activity(s)!=='historical':activity(s)===allFilter);
+  clear($('all-sessions'));
+  if(!selected.length)$('all-sessions').append(empty('No hay sesiones en esta categoría.'));
+  else for(const p of groupSessions(selected))$('all-sessions').append(projectNode(p,true));
+  $('session-filter-count').textContent=`${selected.length} sesiones únicas`;
+  clear($('alerts-preview'));clear($('alerts-full'));
+  if(!alerts.length){$('alerts-preview').append(empty('Sin cruces de umbral registrados.'));$('alerts-full').append(empty('El monitor registra cruces observados mientras está ejecutándose.'));}
+  else{for(const a of alerts.slice(0,4))$('alerts-preview').append(alertNode(a));for(const a of alerts)$('alerts-full').append(alertNode(a));}
+  clear($('checkpoint-list'));
+  if(!checkpoints.length)$('checkpoint-list').append(empty('Aún no se han generado checkpoints.'));
+  else for(const c of checkpoints){let r=node('div','status-row');r.append(node('span','',shortPath(c.project)),node('b','',`${when(c.date)} · ${c.name}`));$('checkpoint-list').append(r);}
+  const d=$('connection-details');clear(d);
+  for(const [k,v] of [['Configuración',state.appserver.configured?'Configurado':'No configurado'],['Estado',state.appserver.connected?'Conectado':'Desconectado'],['Endpoint',state.appserver.url||'—'],['Hilos listados',state.appserver.threads_listed],['Último evento',when(state.appserver.last_event)],['Diagnóstico',state.appserver.error||'Sin incidencias registradas'],['CODEX_HOME',state.codex_home]]){
+    const r=node('div','status-row');r.append(node('span','',k),node('b','',v));d.append(r);
+  }
+}
+async function load(){
+  try{
+    const [r,a,c]=await Promise.all([fetch('/api/status',{cache:'no-store'}),fetch('/api/alerts',{cache:'no-store'}),fetch('/api/checkpoints',{cache:'no-store'})]);
+    if(!r.ok||!a.ok||!c.ok)throw Error('Respuesta HTTP no válida');
+    const newState=await r.json(),newAlerts=(await a.json()).alerts||[];
+    checkpoints=(await c.json()).checkpoints||[];
+    if(alertCursor&&newAlerts.length&&newAlerts[0].id>alertCursor){
+      const latest=newAlerts[0];message(`Nueva alerta ${latest.tier}% · ${shortPath(latest.project)}`);
+      if(browserNotify&&'Notification'in window&&Notification.permission==='granted'&&newState.mode!=='DEMO (simulado)')new Notification('SWAT Context Guardian',{body:`${shortPath(latest.project)} · ${latest.percent.toFixed(1)}%`});
+    }
+    if(newAlerts.length)alertCursor=newAlerts[0].id;
+    state=newState;alerts=newAlerts;render();
+  }catch(e){message('No se puede consultar el backend local.');console.warn('Guardian API error:',e.message);}
+}
+function sourceHistory(s){
+  const holder=$('source-history');clear(holder);
+  const paths=s.source_files||[];
+  if(!paths.length){holder.append(empty('No hay archivos locales de origen para este hilo.'));return;}
+  const intro=node('p','history-explain',`Historial de ${paths.length} archivos asociados al mismo ID. Son mediciones por archivo, no procesos independientes.`);
+  holder.append(intro);
+  for(const item of paths){
+    const row=node('div','history-entry');
+    row.append(node('div','history-path',item.session_file||'Sin ruta'));
+    row.append(node('div','history-meta',`Modificación: ${when(item.last_file_modified_at)} · Medición: ${when(item.measured_at)} · ${item.percent_approx==null?'Sin medición':item.percent_approx.toFixed(1)+'%'}`));
+    holder.append(row);
+  }
+}
+function showDetail(s){
+  selectedId=s.session_id;historyShown=false;
+  const d=$('detail');clear(d);
+  for(const [key,value] of [['ID',s.session_id],['Proyecto',s.project],['Estado',s.activity_label],['Último registro',when(s.last_activity_at)],['Base de actividad',s.activity_basis],['Fuente',s.source],['Archivos asociados',s.source_file_count||0],['Contexto estimado',s.percent_approx==null?'Sin telemetría':s.percent_approx.toFixed(1)+'%'],['Tokens última medición',fmt(s.active_tokens_approx)],['Ventana del modelo',fmt(s.context_window)],['Medición de tokens',when(s.measured_at)],['Estado App Server',s.server_status||'No asociado'],['Archivo más reciente',s.session_file||'No disponible']]){
+    d.append(node('dt','',key),node('dd','',value));
+  }
+  $('source-history').hidden=true;
+  $('history-btn').textContent=`Ver historial (${s.source_file_count||0})`;
+  $('history-btn').disabled=!(s.source_file_count>0);
+  $('copy-path-btn').disabled=!s.session_file;
+  $('open-folder-btn').disabled=state.mode==='DEMO (simulado)'||!s.session_file;
+  $('checkpoint-btn').disabled=state.mode==='DEMO (simulado)'||!s.project;
+  $('modal').classList.add('open');
+}
+function selectedSession(){return (state.sessions||[]).find(s=>s.session_id===selectedId);}
+function nav(view){
+  currentView=view;document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===view));
+  $('view-overview').classList.toggle('hidden',view!=='overview');
+  document.querySelectorAll('.only-panel').forEach(n=>n.classList.toggle('active',n.id==='view-'+view));
+  $('page-title').textContent=({overview:'Overview',sessions:'Sesiones',alerts:'Alertas',checkpoints:'Checkpoints',connection:'Codex Live'})[view]||view;
+}
+document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>nav(n.dataset.view));
+$('filter').onchange=render;$('session-filter').onchange=render;$('refresh').onclick=load;
+$('close-modal').onclick=()=>$('modal').classList.remove('open');
+$('modal').onclick=e=>{if(e.target===$('modal'))$('modal').classList.remove('open');};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').classList.remove('open');});
+$('history-btn').onclick=()=>{const s=selectedSession();if(!s)return;historyShown=!historyShown;$('source-history').hidden=!historyShown;if(historyShown)sourceHistory(s);$('history-btn').textContent=(historyShown?'Ocultar historial':'Ver historial')+` (${s.source_file_count||0})`;};
+$('copy-path-btn').onclick=async()=>{const s=selectedSession();if(!s?.session_file)return;try{await navigator.clipboard.writeText(s.session_file);message('Ruta del JSONL copiada.');}catch(e){message('No fue posible copiar; la ruta figura en la ficha.');}};
+$('open-folder-btn').onclick=async()=>{try{let r=await fetch('/api/sessions/open-folder',{method:'POST',headers:{'Content-Type':'application/json','X-Guardian-Token':state.local_action_token},body:JSON.stringify({session_id:selectedId})});let v=await r.json();if(!r.ok)throw Error(v.detail||'Error');message('Carpeta abierta en Windows Explorer.');}catch(e){message('No se abrió la carpeta: '+e.message);}};
+$('checkpoint-btn').onclick=async()=>{try{let r=await fetch('/api/checkpoints',{method:'POST',headers:{'Content-Type':'application/json','X-Guardian-Token':state.local_action_token},body:JSON.stringify({session_id:selectedId})});let v=await r.json();if(!r.ok)throw Error(v.detail||'Error');$('modal').classList.remove('open');message(v.message||'Checkpoint creado');await load();}catch(e){message('Checkpoint no creado: '+e.message);}};
+$('test-popup').onclick=async()=>{try{let r=await fetch('/api/notifications/test',{method:'POST',headers:{'X-Guardian-Token':state.local_action_token}});let v=await r.json();message(v.message);}catch(e){message('Error notificando: '+e.message);}};
+$('browser-popup').onclick=async()=>{if(!('Notification' in window)){message('Este navegador no admite notificaciones.');return;}try{const permission=await Notification.requestPermission();browserNotify=permission==='granted';message(browserNotify?'Avisos del navegador habilitados mientras la pestaña está abierta.':'Permiso no concedido.');}catch(e){message('No fue posible solicitar permisos.');}};
+load();setInterval(load,5000);
+</script></body></html>

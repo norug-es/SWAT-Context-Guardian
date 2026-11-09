@@ -12,7 +12,7 @@
   **Skill global + supervisor local de contexto para Codex.**  
   *Telemetría aproximada · Checkpoints verificables · Relevos seguros entre sesiones y repositorios.*
 
-  [![Version](https://img.shields.io/badge/version-v0.2.0-06b6d4?style=for-the-badge)](#estado-del-proyecto)
+  [![Version](https://img.shields.io/badge/version-v0.3.1-06b6d4?style=for-the-badge)](#estado-del-proyecto)
   [![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Codex CLI](https://img.shields.io/badge/Codex-CLI-101827?style=for-the-badge&logo=openai&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
   [![Codex Desktop](https://img.shields.io/badge/Codex-Desktop-101827?style=for-the-badge&logo=openai&logoColor=white)](docs/INSTALAR_CODEX_DESKTOP.md)
@@ -24,14 +24,49 @@
   [![Windows](https://img.shields.io/badge/Windows-PowerShell-0078D4?logo=windows&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
   [![Linux](https://img.shields.io/badge/Linux-supported-FCC624?logo=linux&logoColor=black)](docs/INSTALAR_CODEX_CLI.md)
   [![Termux](https://img.shields.io/badge/Termux-supported-24292f?logo=android&logoColor=white)](docs/INSTALAR_CODEX_CLI.md)
-  [![Stdlib](https://img.shields.io/badge/Dependencias-stdlib%20solo-225588?logo=python&logoColor=white)](#requisitos)
+  [![Stdlib](https://img.shields.io/badge/CLI-stdlib%20solo-225588?logo=python&logoColor=white)](#requisitos)
   [![MCP](https://img.shields.io/badge/MCP-integraci%C3%B3n%20futura-777777)](#hoja-de-ruta)
-  [![Tests](https://img.shields.io/badge/Tests-7%20locales-238636?logo=pytest&logoColor=white)](#pruebas)
+  [![Tests](https://img.shields.io/badge/Tests-15%20locales-238636?logo=pytest&logoColor=white)](#pruebas)
 
   **[Instalación CLI](docs/INSTALAR_CODEX_CLI.md) · [Instalación Desktop](docs/INSTALAR_CODEX_DESKTOP.md) · [ChatGPT](docs/INSTALAR_CHATGPT.md) · [Arquitectura](docs/ARQUITECTURA.md)**
 </div>
 
 ---
+
+### 🆕 v0.3.1 · Sesiones únicas, estado verificable e historial
+
+- **Un ID de hilo = una sesión** en el panel, incluso cuando varios archivos `rollout-*.jsonl` comparten identificador. Las distintas rutas permanecen en **Ver historial**.
+- El porcentaje visible utiliza **la medición válida más reciente por fecha**, no el máximo histórico. La ficha muestra la fecha de medición y la de última modificación por separado.
+- **Activa verificada** solo cuando App Server está conectado y comunica estado `active` reciente. **Reciente** significa archivo modificado o evento observado en las últimas 24 horas, **sin confirmar ejecución**. Las demás son **Históricas**.
+- La vista general muestra únicamente activas y recientes por defecto. En **Sesiones** hay filtros para activas, recientes, históricas y todas.
+- La ficha incorpora **Ver historial**, **Copiar ruta** y **Abrir carpeta** (Windows; acción explícita y limitada a `CODEX_HOME/sessions`). No elimina ni edita JSONL.
+
+**[Guía completa de actualización desde v0.3.0](docs/ACTUALIZAR_v0.3.1.md).**
+
+**Actualización segura desde v0.3.0 en PowerShell:** detén el servidor antiguo con `Ctrl+C` en su terminal, descomprime esta versión en otra carpeta y ejecuta `start-control-center.ps1 -WithToasts` desde el paquete nuevo. No borres `~/.codex/sessions/` ni la base SQLite; esta actualización no sustituye automáticamente la skill global. El panel **no instala un servicio permanente**.
+
+## 🖥️ Nuevo en v0.3: SWAT Context Guardian Control Center
+
+![Control Center](https://img.shields.io/badge/Control_Center-Disponible-00b9c7?style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white) ![SQLite](https://img.shields.io/badge/SQLite-Alertas-4169E1?logo=sqlite&logoColor=white) ![WebSocket](https://img.shields.io/badge/Codex_App_Server-WebSocket_experimental-a78bfa) ![Windows Toast](https://img.shields.io/badge/Windows-Toasts_opcionales-0078D4?logo=windows) ![Privacy](https://img.shields.io/badge/Sesiones-Solo_lectura-16a34a)
+
+**Panel web local en `http://127.0.0.1:8765`** para observar sesiones por proyecto, porcentaje de contexto, fuente de datos, alertas y checkpoints. La UI obtiene datos de JSONL y opcionalmente de App Server mediante WebSocket autenticado. No controla sesiones externas, no compacta ni realiza backups horarios.
+
+```powershell
+cd "$HOME\Downloads\swat-context-guardian"
+.\start-control-center.ps1                   # Panel JSONL
+# O bien:
+.\start-control-center.ps1 -WithToasts       # Activa popup Windows
+.\start-control-center.ps1 -Demo -Port 8766  # Demo claramente simulada
+```
+
+Para conectar el App Server de forma segura, utiliza las instrucciones de **[docs/CONTROL_CENTER.md](docs/CONTROL_CENTER.md)**. El monitor se ejecuta mientras su proceso esté abierto, aunque se cierre el navegador. `-WithAppServer` conecta a `ws://127.0.0.1:4500`; **no arranca Codex automáticamente**, ni se suscribe por defecto a hilos externos.
+
+```powershell
+# Después de levantar un App Server con --ws-auth capability-token
+.\start-control-center.ps1 -WithAppServer -WithToasts -TokenFile "$HOME\.codex\context-guardian\ws-token.txt"
+```
+
+> **Seguridad:** solo loopback, token de acciones de la UI, lectura de sesiones, registros SQLite de metadatos, notificaciones solo tras cruce observado de umbral. La instalación global previa de la skill se conserva salvo `--replace` con backup. **La conexión real con tu versión de Codex aún debe probarse en tu equipo.**
 
 ## ✨ ¿Qué es?
 
@@ -47,7 +82,7 @@ El proyecto combina **dos componentes diferentes**:
 
 ### 🧩 Funcionalidades e iconografía
 
-| Icono | Módulo | Función | Estado v0.2 |
+| Icono | Módulo | Función | Estado v0.3 |
 |:---:|---|---|---|
 | 🧭 | **Doctor** | Verificar rutas de Codex y disponibilidad de sesiones. | ✅ Implementado |
 | 📊 | **Status** | Mostrar estimación de ocupación por sesión. | ✅ Implementado |
@@ -56,7 +91,7 @@ El proyecto combina **dos componentes diferentes**:
 | 🔁 | **Handoff** | Generar Markdown de continuidad revisable. | ✅ Implementado |
 | 🛡️ | **Safety Guard** | Evitar sobrescrituras accidentales y preservar backups de configuración. | ✅ Controles básicos |
 | 🧠 | **Native Compaction** | Previsualizar ajuste opcional de compactación de Codex. | ⚠️ Requiere autorización y versión compatible |
-| 🔌 | **MCP / App Server** | Monitorización o control mediante un servicio gestionado. | 🗺️ No implementado |
+| 🔌 | **App Server WS** | Consulta metadatos y eventos disponibles en un servidor local autenticado. | ✅ Integración opcional y experimental |
 | ☁️ | **ChatGPT** | Instrucciones reutilizables para revisar checkpoints suministrados. | 📄 Paquete separado; sujeto a disponibilidad |
 
 ## 🚦 Política de contexto
@@ -106,14 +141,14 @@ flowchart TD
 
 ## 📦 Requisitos
 
-- Python **3.11+**; solo biblioteca estándar (`tomllib`, `argparse`, `json`, etc.).
+- Python **3.11+**. El monitor CLI utiliza solo biblioteca estándar; el panel instala FastAPI, Uvicorn y websockets en un entorno virtual.
 - Codex CLI o Desktop con sesiones locales accesibles para **monitorizar**. Para elaborar un checkpoint sin telemetría también puedes usar el comando manual.
 - Permisos de lectura sobre `CODEX_HOME/sessions` para el monitor y de escritura en `CODEX_HOME/context-guardian` para sus propios reportes.
-- Sin claves API, servicios web ni dependencias Node.js obligatorias.
+- El monitor CLI no requiere dependencias externas. El panel web v0.3 utiliza FastAPI/Uvicorn/websockets, instalados en `.venv`. No requiere Node.js.
 
 ## 🚀 Instalación rápida (Windows PowerShell)
 
-1. Descarga y descomprime `SWAT-Context-Guardian-v0.2.0.zip`. Dentro debe existir `swat-context-guardian/`.
+1. Descarga y descomprime `SWAT-Context-Guardian-v0.3.1-Control-Center.zip`. Dentro debe existir `swat-context-guardian/`.
 2. Abre PowerShell y ejecuta:
 
 ```powershell
@@ -262,7 +297,7 @@ swat-context-guardian/
 ## 🔐 Privacidad y seguridad
 
 - **Read-only respecto a rollouts:** no se reescriben logs de sesiones Codex.
-- **Sin red en el supervisor:** no se envían credenciales ni historiales a ningún servicio.
+- **Monitor CLI sin red:** no envía credenciales ni historiales. El panel web usa loopback y puede conectarse únicamente al App Server local con token explícito.
 - **Sin cambios automáticos en Codex/producción:** jamás modifica Git, contenedores, migraciones o servicios al cruzar un umbral.
 - **Sin resumen inventado:** el programa no reconstruye decisiones con IA; genera checkpoints con texto proporcionado explícitamente.
 - **Aislamiento de proyectos:** los relevos deben preservar rutas, rama/HEAD, evidencias y restricciones del proyecto concreto.
@@ -275,7 +310,7 @@ swat-context-guardian/
 python -m unittest discover -s tests -v
 ```
 
-**Validación de esta entrega:** siete pruebas unitarias en entorno aislado, con sesiones simuladas. Esto **no prueba** compatibilidad con cada versión de Codex ni instalación real en tu máquina.
+**Validación de esta entrega:** 15 pruebas unitarias y de integración simulada, en entorno aislado. Esto **no prueba** compatibilidad con cada versión de Codex ni instalación real en tu máquina.
 
 ## 🗺️ Hoja de ruta
 
@@ -284,14 +319,15 @@ python -m unittest discover -s tests -v
 - [x] Checkpoints JSON explícitos y handoffs Markdown.
 - [x] Instalador conservador y pruebas unitarias.
 - [x] Metadatos y banner para README / selector de skills.
-- [ ] Integración nativa y verificada con Codex App Server y eventos de hilos gestionados.
+- [x] Cliente WebSocket experimental de App Server con `initialize`, `thread/list` y eventos disponibles; probado contra servidor simulado.
+- [ ] Validar el puente con el binario real de Codex instalado por el usuario.
 - [ ] Servicio persistente opcional de Windows/systemd con instalación y desinstalación seguras.
 - [ ] API/MCP de métricas sanitizadas con autenticación y permisos, si se autoriza.
 - [ ] Integración supervisada con ChatGPT mediante un conector aprobado.
 
 ## 📌 Estado del proyecto
 
-**MVP local v0.2.0**. Los badges estáticos describen las tecnologías y el alcance del paquete; **no sustituyen pruebas de integración ni demuestran compatibilidad con una versión concreta del cliente**. La licencia de distribución debe elegirse y publicarse en un archivo `LICENSE` antes de afirmar condiciones de reutilización open source.
+**MVP local v0.3.1**. Los badges estáticos describen las tecnologías y el alcance del paquete; **no sustituyen pruebas de integración ni demuestran compatibilidad con una versión concreta del cliente**. La licencia de distribución debe elegirse y publicarse en un archivo `LICENSE` antes de afirmar condiciones de reutilización open source.
 
 ## 📚 Referencias oficiales
 
