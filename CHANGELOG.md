@@ -8,7 +8,7 @@
 - Adaptador ccusage opcional para costes y agentes; se mantiene separado de los contadores Codex JSONL.
 - Adaptador opcional Win-CodexBar CLI para cuotas multiproveedor, sin importar credenciales.
 - Nuevas regresiones y GitHub Actions de Python y JavaScript. No se han modificado el supervisor, la skill ni los checkpoints originales.
-- Sin instalador nativo ni verificación en Windows real a la fecha; no release estable.
+- Build portátil Windows x64 (PyInstaller) validado con smoke test del ejecutable en runner Windows; artefacto beta de GitHub Actions. No firmado ni probado en equipos de usuarios; todavía no release estable.
 
 ## v0.3.1 — Identidad y actividad de sesiones
 
