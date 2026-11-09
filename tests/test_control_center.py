@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import json
 import tempfile
 import unittest
@@ -10,6 +11,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from control_center.server import Settings, create_app, GuardianState, extract_ws_usage
+from control_center.codex_appserver import CodexAppServerClient
 
 
 def event(total: int, window: int = 200):
@@ -33,6 +35,49 @@ def rollout(home: Path, project: Path, total: int):
 
 
 class ControlCenterTests(unittest.TestCase):
+    def test_codex_appserver_stdio_snapshot_is_normalized(self):
+        responses = [
+            {'id': 1, 'result': {'userAgent': 'mock-codex'}},
+            {'id': 2, 'result': {'account': {'email': 'private@example.test', 'planType': 'pro'}}},
+            {'id': 3, 'result': {'rateLimits': {'rateLimitWindows': [
+                {'windowDurationMins': 300, 'usedPercent': 25, 'resetsAt': 123}
+            ]}}},
+            {'id': 4, 'result': {'usage': {
+                'lifetimeTokens': 1000,
+                'dailyUsageBuckets': [{'date': '2026-11-09', 'tokens': 100}],
+            }}},
+        ]
+
+        class FakeProcess:
+            def __init__(self):
+                self.stdin = io.StringIO()
+                self.stdout = io.StringIO('\n'.join(json.dumps(x) for x in responses) + '\n')
+
+            def terminate(self):
+                pass
+
+            def wait(self, timeout=None):
+                return 0
+
+            def kill(self):
+                pass
+
+        with CodexAppServerClient(popen=lambda *args, **kwargs: FakeProcess()) as client:
+            snapshot = client.read_snapshot()
+
+        self.assertEqual(snapshot['account'], {'authenticated': True, 'plan': 'pro'})
+        self.assertEqual(snapshot['rate_limits'][0]['remaining_percent'], 75.0)
+        self.assertEqual(snapshot['usage']['lifetime_tokens'], 1000)
+        self.assertNotIn('private@example.test', json.dumps(snapshot))
+
+    def test_codex_account_endpoint_is_read_only_demo(self):
+        with tempfile.TemporaryDirectory() as td:
+            with TestClient(create_app(Settings(Path(td), demo=True))) as c:
+                response = c.get('/api/codex/account')
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.json()['ok'])
+                self.assertEqual(response.json()['source'], 'DEMO (simulado)')
+
     def test_web_status_and_docs_in_demo_mode(self):
         with tempfile.TemporaryDirectory() as td:
             s = Settings(Path(td) / '.codex', demo=True)

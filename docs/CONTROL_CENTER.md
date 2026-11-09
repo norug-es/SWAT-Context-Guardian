@@ -124,6 +124,33 @@ $TokenFile = Join-Path $HOME '.codex\context-guardian\ws-token.txt'
 .\start-control-center.ps1 -WithAppServer -WithToasts -TokenFile $TokenFile
 ```
 
+## 4. Lectura de cuenta y cuota mediante Codex App Server (en integración)
+
+El Control Center incorpora una primera lectura bajo demanda mediante el proceso
+local `codex app-server` por `stdin/stdout`. Codex conserva la autenticación y el
+acceso al backend; Guardian no lee `auth.json`, no almacena respuestas crudas y
+solo consulta:
+
+- `account/read`
+- `account/rateLimits/read`
+- `account/usage/read`
+
+Con el panel en marcha, la API local es:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8765/api/codex/account
+```
+
+Si el ejecutable no está en `PATH`, inicia el panel con una ruta explícita:
+
+```powershell
+.\start-control-center.ps1 -CodexCommand 'C:\ruta\a\codex.exe'
+```
+
+Esta primera integración es deliberadamente de solo lectura y todavía no
+conecta estos datos con las tarjetas visuales ni consume créditos/reset credits.
+Un error del CLI devuelve `503` sin convertirlo en una medición válida.
+
 Abre http://127.0.0.1:8765. La pestaña **Conexión Codex** mostrará el estado del enlace. El token nunca se envía al navegador ni se almacena en SQLite.
 
 **Comprobación de puerto:**

@@ -4,7 +4,8 @@ param(
     [switch]$WithToasts,
     [switch]$Demo,
     [int]$Port = 8765,
-    [string]$TokenFile = ""
+    [string]$TokenFile = "",
+    [string]$CodexCommand = ""
 )
 $ErrorActionPreference = 'Stop'
 $Root = $PSScriptRoot
@@ -31,5 +32,6 @@ if ($Demo) { $Params += '--demo' }
 if ($WithToasts) { $Params += '--native-toasts' }
 if ($WithAppServer) { $Params += @('--appserver-url', 'ws://127.0.0.1:4500') }
 if ($TokenFile) { $Params += @('--appserver-token-file', $TokenFile) }
+if ($CodexCommand) { $Params += @('--codex-command', $CodexCommand) }
 Write-Host "Panel local: http://127.0.0.1:$Port"
 & $Python @Params

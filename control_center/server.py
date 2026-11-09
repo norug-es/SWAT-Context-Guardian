@@ -27,6 +27,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
 
+from .codex_appserver import CodexAppServerClient, CodexAppServerError
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 STATIC = Path(__file__).resolve().parent / 'static'
 GUARDIAN = PROJECT_ROOT / 'scripts' / 'guardian.py'
@@ -89,6 +91,7 @@ class Settings:
     native_toasts: bool = False
     appserver_url: str | None = None
     appserver_token_file: Path | None = None
+    codex_command: str = 'codex'
     demo: bool = False
 
 
@@ -507,6 +510,18 @@ class GuardianState:
             'codex_home': str(self.home), 'scan_error': self.error,
         }
 
+    def codex_account_snapshot(self) -> dict:
+        """Read account/quota/usage through Codex-owned authentication on demand."""
+        if self.settings.demo:
+            return {
+                'source': 'DEMO (simulado)', 'measured_at': utc_now(),
+                'account': {'authenticated': True, 'plan': 'demo'},
+                'rate_limits': [], 'usage': {},
+            }
+        client = CodexAppServerClient(command=[self.settings.codex_command, 'app-server'])
+        with client:
+            return client.read_snapshot()
+
     def checkpoints(self) -> list[dict]:
         folder = self.output / 'checkpoints'
         if not folder.is_dir():
@@ -616,6 +631,17 @@ def create_app(settings: Settings) -> FastAPI:
     async def status():
         return {**app.state.guardian.overview(), 'local_action_token': app.state.csrf_token}
 
+    @app.get('/api/codex/account')
+    async def codex_account() -> JSONResponse:
+        """Optional read-only account and quota snapshot; never stores raw responses."""
+        try:
+            snapshot = await asyncio.to_thread(app.state.guardian.codex_account_snapshot)
+        except CodexAppServerError as exc:
+            return JSONResponse(status_code=503, content={
+                'ok': False, 'source': 'Codex App Server stdio', 'error': str(exc),
+            })
+        return JSONResponse(content={'ok': True, **snapshot})
+
     @app.get('/api/alerts')
     async def alerts():
         return {'alerts': app.state.guardian.db.recent(75)}
@@ -686,6 +712,7 @@ def main() -> None:
     parser.add_argument('--appserver-token-file', type=Path,
                         default=Path(os.environ['GUARDIAN_APP_SERVER_TOKEN_FILE'])
                         if os.environ.get('GUARDIAN_APP_SERVER_TOKEN_FILE') else None)
+    parser.add_argument('--codex-command', default=os.environ.get('CODEX_COMMAND', 'codex'))
     parser.add_argument('--demo', action='store_true', help='Explicitly simulated demo for UI preview')
     args = parser.parse_args()
     if not (1024 <= args.port <= 65535):
@@ -699,7 +726,8 @@ def main() -> None:
     settings = Settings(codex_home=args.codex_home.expanduser(), port=args.port,
                         interval=args.interval, hours=args.hours, limit=args.limit,
                         native_toasts=args.native_toasts, appserver_url=args.appserver_url,
-                        appserver_token_file=args.appserver_token_file, demo=args.demo)
+                        appserver_token_file=args.appserver_token_file,
+                        codex_command=args.codex_command, demo=args.demo)
     import uvicorn
     print(f'SWAT Context Guardian Control Center -> http://127.0.0.1:{args.port}')
     print('Codex sessions: READ ONLY. No compaction or session changes.')
