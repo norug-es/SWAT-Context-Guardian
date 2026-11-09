@@ -90,6 +90,8 @@ class ControlCenterTests(unittest.TestCase):
                 self.assertEqual(status['mode'], 'DEMO (simulado)')
                 self.assertEqual(c.get('/').status_code, 200)
                 self.assertIn('Control Center', c.get('/').text)
+                self.assertIn('Cuenta y cuota Codex', c.get('/').text)
+                self.assertIn('Consultar cuota Codex', c.get('/').text)
                 self.assertFalse((Path(td) / '.codex').exists(), 'Demo must not create Codex files')
                 self.assertEqual(c.get('/api/alerts').json()['alerts'], [])
 

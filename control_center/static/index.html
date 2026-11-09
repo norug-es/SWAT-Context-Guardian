@@ -26,7 +26,7 @@
 <div class="modal-bg" id="modal" role="dialog" aria-modal="true" aria-label="Detalles de sesión"><div class="modal"><h3>Ficha de sesión</h3><dl class="detail" id="detail"></dl><div id="source-history" class="source-history" hidden></div><div class="modal-actions"><button class="action secondary" id="history-btn">Ver historial</button><button class="action secondary" id="copy-path-btn">Copiar ruta</button><button class="action secondary" id="open-folder-btn">Abrir carpeta</button><button class="action secondary" id="close-modal">Cerrar</button><button class="action" id="checkpoint-btn">Checkpoint</button></div></div></div><div id="toast" class="toast" role="status"></div>
 <script>
 const $=id=>document.getElementById(id);
-let state=null,alerts=[],checkpoints=[],selectedId=null,currentView='overview',alertCursor=0,browserNotify=false,historyShown=false;
+let state=null,alerts=[],checkpoints=[],codexSnapshot=null,selectedId=null,currentView='overview',alertCursor=0,browserNotify=false,historyShown=false;
 const safeText=v=>String(v??'—');
 const shortPath=p=>!p?'Sin proyecto':p.replaceAll('\\','/').split('/').filter(Boolean).pop()||p;
 const fmt=n=>n==null?'—':new Intl.NumberFormat('es-ES').format(n);
@@ -38,6 +38,33 @@ function node(tag,className,text){const n=document.createElement(tag);if(classNa
 function clear(el){el.replaceChildren();}
 function message(str){const t=$('toast');t.textContent=str;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),4000);}
 function empty(msg){return node('div','empty',msg);}
+function injectAccountPanel(){
+  if($('account-panel'))return;
+  const panel=node('section','panel');panel.id='account-panel';
+  const heading=node('div','heading'),title=node('div');
+  title.append(node('h3','', 'Cuenta y cuota Codex'),node('div','sub','Lectura bajo demanda mediante App Server'));
+  heading.append(title,node('span','tiny-pill','READ ONLY'));panel.append(heading);
+  const status=node('div','status-row');status.innerHTML='<span>Estado</span><b id="account-state">No consultado</b>';panel.append(status);
+  panel.append(node('div','',''));
+  panel.lastChild.id='account-details';panel.lastChild.append(empty('Pulsa para consultar cuenta, cuota y uso.'));
+  const button=node('button','small-btn','↻ Consultar cuota Codex');button.id='load-account';button.style.width='100%';button.style.marginTop='12px';panel.append(button);
+  panel.append(node('p','note','No lee tokens ni modifica créditos. La consulta la realiza Codex CLI.'));
+  document.querySelector('.sidebar-panel').append(panel);
+  button.onclick=loadCodexAccount;
+}
+function renderCodexAccount(){
+  const stateNode=$('account-state'),details=$('account-details');
+  if(!stateNode||!details)return;
+  clear(details);
+  if(!codexSnapshot){stateNode.textContent='No consultado';details.append(empty('Pulsa para consultar cuenta, cuota y uso.'));return;}
+  if(codexSnapshot.error){stateNode.textContent='No disponible';details.append(empty(codexSnapshot.error));return;}
+  const account=codexSnapshot.account||{};stateNode.textContent=account.authenticated?'Conectada':'No autenticada';
+  const rows=[];if(account.plan)rows.push(['Plan',account.plan]);
+  for(const [i,limit] of (codexSnapshot.rate_limits||[]).entries())rows.push([`Cuota ${limit.window_duration_mins||i+1} min`,limit.remaining_percent==null?'Sin dato':`${Number(limit.remaining_percent).toFixed(1)}% restante`]);
+  const usage=codexSnapshot.usage||{};if(usage.lifetime_tokens!=null)rows.push(['Tokens acumulados',fmt(usage.lifetime_tokens)]);
+  for(const [key,value] of rows){const row=node('div','status-row');row.append(node('span','',key),node('b','',value));details.append(row);}
+  if(!rows.length)details.append(empty('Codex respondió sin datos mostrables.'));
+}
 function groupSessions(sessions){
   const g=new Map();
   for(const s of sessions){const k=s.project||'Sin proyecto';if(!g.has(k))g.set(k,[]);g.get(k).push(s);}
@@ -136,6 +163,12 @@ async function load(){
     state=newState;alerts=newAlerts;render();
   }catch(e){message('No se puede consultar el backend local.');console.warn('Guardian API error:',e.message);}
 }
+async function loadCodexAccount(){
+  const button=$('load-account');button.disabled=true;button.textContent='Consultando Codex...';
+  try{const r=await fetch('/api/codex/account',{cache:'no-store'});const value=await r.json();codexSnapshot=r.ok?value:{error:value.error||'Codex App Server no disponible'};renderCodexAccount();message(r.ok?'Cuota Codex actualizada.':'No se pudo consultar Codex.');}
+  catch(e){codexSnapshot={error:'No se puede contactar con el backend local.'};renderCodexAccount();message('No se pudo consultar la cuota Codex.');}
+  finally{button.disabled=false;button.textContent='↻ Consultar cuota Codex';}
+}
 function sourceHistory(s){
   const holder=$('source-history');clear(holder);
   const paths=s.source_files||[];
@@ -181,5 +214,6 @@ $('open-folder-btn').onclick=async()=>{try{let r=await fetch('/api/sessions/open
 $('checkpoint-btn').onclick=async()=>{try{let r=await fetch('/api/checkpoints',{method:'POST',headers:{'Content-Type':'application/json','X-Guardian-Token':state.local_action_token},body:JSON.stringify({session_id:selectedId})});let v=await r.json();if(!r.ok)throw Error(v.detail||'Error');$('modal').classList.remove('open');message(v.message||'Checkpoint creado');await load();}catch(e){message('Checkpoint no creado: '+e.message);}};
 $('test-popup').onclick=async()=>{try{let r=await fetch('/api/notifications/test',{method:'POST',headers:{'X-Guardian-Token':state.local_action_token}});let v=await r.json();message(v.message);}catch(e){message('Error notificando: '+e.message);}};
 $('browser-popup').onclick=async()=>{if(!('Notification' in window)){message('Este navegador no admite notificaciones.');return;}try{const permission=await Notification.requestPermission();browserNotify=permission==='granted';message(browserNotify?'Avisos del navegador habilitados mientras la pestaña está abierta.':'Permiso no concedido.');}catch(e){message('No fue posible solicitar permisos.');}};
+injectAccountPanel();
 load();setInterval(load,5000);
 </script></body></html>
