@@ -381,3 +381,80 @@ class IntelligenceService:
                 "agents": sorted(agent_totals.values(), key=lambda x: -x["tokens"]),
                 "unpriced_models": unpriced,
                 "rows": len(rows)}
+
+    def windows_provider_report(self) -> dict[str, Any]:
+        """Opt-in, sanitized Windows CodexBar CLI quota import.
+
+        Uses only already enabled providers and never reads cookies, credentials,
+        DPAPI files or account identities. CLI may perform provider network
+        requests; this method must only be called from an explicit UI action.
+        """
+        if self.demo:
+            return {"available": False, "source": "DEMO (simulado)",
+                    "message": "El adaptador no se ejecuta en modo demo", "providers": []}
+        binary = (shutil.which("codexbar-cli.exe") or shutil.which("codexbar-cli"))
+        if not binary:
+            return {"available": False, "source": "Win-CodexBar CLI",
+                    "message": "No se encontró codexbar-cli.exe en PATH", "providers": []}
+        try:
+            process = subprocess.run([binary, "usage", "--json"],
+                     stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                     timeout=85, text=True, encoding="utf-8", errors="replace",
+                     check=False)
+        except (OSError, subprocess.TimeoutExpired):
+            return {"available": False, "source": "Win-CodexBar CLI",
+                    "message": "El CLI no respondió dentro del límite de 85 segundos",
+                    "providers": []}
+        if process.returncode != 0 or len(process.stdout) > 2_000_000:
+            return {"available": False, "source": "Win-CodexBar CLI",
+                    "message": "El CLI no produjo JSON completo", "providers": []}
+        try:
+            decoded = json.loads(process.stdout)
+        except ValueError:
+            return {"available": False, "source": "Win-CodexBar CLI",
+                    "message": "El CLI devolvió una respuesta no JSON", "providers": []}
+        if not isinstance(decoded, list):
+            return {"available": False, "source": "Win-CodexBar CLI",
+                    "message": "Formato de respuesta no reconocido", "providers": []}
+
+        def lane(raw: Any, label: str) -> dict[str, Any] | None:
+            if not isinstance(raw, dict) or raw.get("is_informational"):
+                return None
+            used = raw.get("used_percent")
+            if not isinstance(used, (int, float)) or isinstance(used, bool) or not 0 <= used <= 100:
+                return None
+            minutes = _number(raw.get("window_minutes"))
+            reset = raw.get("resets_at")
+            return {
+                "name": label, "used_percent": round(float(used), 2),
+                "remaining_percent": round(100 - float(used), 2),
+                "window_minutes": minutes,
+                "resets_at": reset[:40] if isinstance(reset, str) and _date(reset) else None,
+            }
+
+        result: list[dict[str, Any]] = []
+        for raw in decoded[:120]:
+            if not isinstance(raw, dict):
+                continue
+            provider = raw.get("provider")
+            if not isinstance(provider, str) or not 1 <= len(provider) <= 48:
+                continue
+            if not all(ch.isalnum() or ch in ("-", "_") for ch in provider):
+                continue
+            usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
+            windows = []
+            for key, label in (("primary", "Principal"), ("secondary", "Secundaria")):
+                candidate = lane(usage.get(key), label)
+                if candidate:
+                    windows.append(candidate)
+            status_data = raw.get("status")
+            status = status_data.get("level") if isinstance(status_data, dict) else None
+            status = status if status in ("operational", "degraded", "major", "unknown") else None
+            kind = raw.get("errorKind")
+            kind = kind if kind in ("needsAuthentication", "expiredSession",
+                  "localRuntimeOffline", "browserSignInRequired", "timeout", "unknown") else None
+            result.append({"provider": provider, "windows": windows,
+                           "status": status, "error_kind": kind})
+        return {"available": True, "source": "Win-CodexBar CLI (proveedores habilitados)",
+                "message": "Cuotas reportadas por cada proveedor; no equivalen a tokens locales",
+                "providers": result}
