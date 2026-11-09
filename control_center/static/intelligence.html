@@ -132,6 +132,17 @@ function bars(container,rows,valueKey){const host=el(container);clean(host);if(!
  const track=asText(row,"div","","bar-track");const fill=asText(track,"div","","bar-fill");fill.style.width=(100*(item[valueKey]||0)/max).toFixed(2)+"%";
  asText(row,"div",compact(item[valueKey]||0),"bar-number");}
 }
+function costBars(container,rows){const host=el(container);clean(host);
+ const list=(rows||[]).filter(x=>x.cost_usd!=null).slice(0,12);
+ if(!list.length){empty(host,"No se recibieron costes por modelo.");return;}
+ const max=Math.max(...list.map(x=>x.cost_usd||0),0.00000001);
+ for(const item of list){const row=asText(host,"div","","bar-row");asText(row,"div",item.name,"bar-name").title=item.name;
+ const track=asText(row,"div","","bar-track"),fill=asText(track,"div","","bar-fill");
+ fill.style.width=(100*(item.cost_usd||0)/max).toFixed(2)+"%";fill.style.background="#a897ff";
+ asText(row,"div",money(item.cost_usd),"bar-number");
+ if(item.unpriced)asText(host,"div","Modelo con precios incompletos: "+item.name,"tiny");
+ }
+}
 function activityInsights(rows){const host=el("activity-insights");clean(host);
  const peak=Math.max(0,...rows.map(x=>x.tokens||0));let streak=0,longest=0,active=0;
  for(const x of rows){if(x.tokens>0){active++;streak++;longest=Math.max(longest,streak);}else streak=0;}
@@ -185,6 +196,7 @@ async function windowsProviders(){const b=el("providers-btn");b.disabled=true;el
  const grid=asText(host,"div","","");grid.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px";
  for(const item of v.providers){const card=asText(grid,"div","","");card.style.cssText="border:1px solid #2b455d;border-radius:12px;padding:14px;background:#0c1a2c";
   const heading=asText(card,"div","","heading");heading.style.marginBottom="10px";asText(heading,"strong",item.provider,"");asText(heading,"span",item.status||item.error_kind||"Sin estado","tag");
+  if(item.pace?.stage)asText(card,"div","Ritmo de consumo: "+item.pace.stage+(item.pace.delta_percent!=null?" · "+item.pace.delta_percent+" pp":""),"tiny");
   if(!item.windows.length)asText(card,"p","No se recibieron cuotas porcentuales verificables.");
   for(const limit of item.windows){const row=asText(card,"div","","quota"),title=asText(row,"div","","quota-top");
    asText(title,"span",limit.name+(limit.window_minutes?" · "+limit.window_minutes+" min":""),"");
@@ -215,6 +227,8 @@ async function external(){const b=el("ccusage-btn");b.disabled=true;el("external
  const agentsPane=asText(cols,"div","","");asText(agentsPane,"h2","Agentes detectados por ccusage");
  const agentsGraph=asText(agentsPane,"div","","");agentsGraph.id="external-agents-chart";
  bars("external-agents-chart",v.agents||[],"tokens");
+ const modelsPane=asText(cols,"div","","");asText(modelsPane,"h2","Coste estimado por modelo");
+ const modelsGraph=asText(modelsPane,"div","","");modelsGraph.id="external-model-chart";costBars("external-model-chart",v.models||[]);
  }catch(err){empty(el("external-chart"),"Error de ccusage: "+err.message);}finally{b.disabled=false;}
 }
 document.querySelectorAll("[data-days]").forEach(btn=>btn.addEventListener("click",()=>{days=Number(btn.dataset.days);document.querySelectorAll("[data-days]").forEach(x=>x.classList.toggle("active",x===btn));reload();}));
