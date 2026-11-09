@@ -1,0 +1,67 @@
+name: SWAT Guardian Windows Portable (beta)
+
+on:
+  push:
+    branches:
+      - feature/context-guardian-v0.4-intelligence
+    paths:
+      - 'control_center/**'
+      - 'scripts/guardian.py'
+      - '.github/workflows/windows-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install runtime and packager
+        shell: pwsh
+        run: |
+          python -m pip install -r control_center/requirements.txt "pyinstaller>=6.16,<7" winotify==1.1.0
+      - name: Compile portable EXE
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onedir --console --name SWAT-Guardian --paths . --collect-submodules uvicorn --collect-submodules websockets --hidden-import winotify --add-data 'control_center/static;control_center/static' --add-data 'scripts/guardian.py;scripts' --add-data 'assets/banner-swat-context-guardian.png;assets' control_center/launcher.py
+          if ($LASTEXITCODE -ne 0) { throw 'PyInstaller failed' }
+      - name: Verify packaged runtime via demo API
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:GUARDIAN_NO_BROWSER = '1'
+          $bin = (Resolve-Path '.\dist\SWAT-Guardian\SWAT-Guardian.exe').Path
+          $proc = Start-Process -FilePath $bin -ArgumentList @('--demo','--port','8881') -PassThru
+          try {
+            $ready = $false
+            1..50 | ForEach-Object {
+              if (-not $ready) {
+                try {
+                  $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8881/api/health' -TimeoutSec 2
+                  if ($health.ok) { $ready = $true }
+                } catch { Start-Sleep -Seconds 1 }
+              }
+            }
+            if (-not $ready) { throw 'Packaged Guardian did not start' }
+            $data = Invoke-RestMethod -Uri 'http://127.0.0.1:8881/api/intelligence?days=30'
+            if ($data.mode -ne 'DEMO (simulado)' -or $data.calendar.Count -ne 30) {
+              throw 'Packaged analytics not working'
+            }
+            $html = Invoke-WebRequest -Uri 'http://127.0.0.1:8881/intelligence'
+            if ($html.Content -notmatch 'Mapa de calor') { throw 'Packaged HTML missing' }
+            Write-Host 'PORTABLE_WINDOWS_DEMO=PASS'
+          } finally {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          }
+      - name: Upload portable beta
+        uses: actions/upload-artifact@v4
+        with:
+          name: SWAT-Context-Guardian-v0.4-Windows-x64-beta
+          path: dist/SWAT-Guardian/
+          retention-days: 14
