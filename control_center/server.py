@@ -637,13 +637,15 @@ def create_app(settings: Settings) -> FastAPI:
             raise HTTPException(422, 'El rango permitido es de 1 a 365 días')
         return await asyncio.to_thread(app.state.intelligence.snapshot, days)
 
-    @app.get('/api/intelligence/ccusage')
-    async def intelligence_ccusage():
+    @app.post('/api/intelligence/ccusage')
+    async def intelligence_ccusage(request: Request):
+        valid_local_origin(request)
         return await asyncio.to_thread(app.state.intelligence.ccusage_report)
 
-    @app.get('/api/intelligence/windows-providers')
-    async def intelligence_windows_providers():
-        # Invoked only after the user explicitly clicks 'Consultar proveedores'.
+    @app.post('/api/intelligence/windows-providers')
+    async def intelligence_windows_providers(request: Request):
+        # Explicit local-token action: prevents cross-site GET-triggered CLI probes.
+        valid_local_origin(request)
         return await asyncio.to_thread(app.state.intelligence.windows_provider_report)
 
     @app.get('/assets/guardian-banner.png')
