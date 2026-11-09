@@ -162,12 +162,23 @@ async function quotas(){const b=el("quota-btn");b.disabled=true;el("quotas").tex
 async function external(){const b=el("ccusage-btn");b.disabled=true;el("external-chart").textContent="Leyendo ccusage local (solo datos agregados)...";
  try{const r=await fetch("/api/intelligence/ccusage",{cache:"no-store"}),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
  const host=el("external-chart");clean(host);if(!v.available){empty(host,v.message||"Fuente externa no disponible.");return;}
- const rows=v.daily||[];const costs=rows.filter(x=>x.cost_usd!=null);
- const top=asText(host,"div","","");top.style.cssText="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:15px";
- asText(top,"span","Registros diarios: "+fmt(rows.length),"tag");asText(top,"span","Coste agregado informado: "+money(costs.length?costs.reduce((s,x)=>s+x.cost_usd,0):null),"tag");
- const explanation=asText(host,"p","Fuente independiente con varios agentes, incluido Codex. No se suma al total de JSONL. Los costes son estimaciones del CLI, no cobros verificados.");
- if(costs.length)plot("external-chart",costs,"cost_usd","#aa9cff",true);
- else asText(host,"div","Sin costes numéricos disponibles.","empty");
+ const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-days+1);
+ const limit=cutoff.toISOString().slice(0,10);
+ const rows=(v.daily||[]).filter(x=>x.date>=limit);
+ const costs=rows.filter(x=>x.cost_usd!=null);
+ const top=asText(host,"div","","");top.style.cssText="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:15px";
+ asText(top,"span","Días informados: "+fmt(rows.length),"tag");
+ asText(top,"span","Coste estimado: "+money(costs.length?costs.reduce((s,x)=>s+x.cost_usd,0):null),"tag");
+ asText(host,"p","Incluye múltiples agentes y puede incluir Codex. Es una fuente independiente: nunca sumes sus tokens al contador JSONL. No representa cargos facturados.");
+ if((v.unpriced_models||[]).length)asText(host,"p","Advertencia de ccusage: modelos sin precio ("+v.unpriced_models.join(", ")+"). El coste reportado puede infravalorar el uso.");
+ const cols=asText(host,"div","","");cols.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:19px";
+ const costPane=asText(cols,"div","","");asText(costPane,"h2","Coste diario estimado");
+ const costGraph=asText(costPane,"div","","");costGraph.id="external-cost-chart";
+ if(costs.length)plot("external-cost-chart",costs,"cost_usd","#aa9cff",true);
+ else empty(costGraph,"No hay costes numéricos disponibles.");
+ const agentsPane=asText(cols,"div","","");asText(agentsPane,"h2","Agentes detectados por ccusage");
+ const agentsGraph=asText(agentsPane,"div","","");agentsGraph.id="external-agents-chart";
+ bars("external-agents-chart",v.agents||[],"tokens");
  }catch(err){empty(el("external-chart"),"Error de ccusage: "+err.message);}finally{b.disabled=false;}
 }
 document.querySelectorAll("[data-days]").forEach(btn=>btn.addEventListener("click",()=>{days=Number(btn.dataset.days);document.querySelectorAll("[data-days]").forEach(x=>x.classList.toggle("active",x===btn));reload();}));
