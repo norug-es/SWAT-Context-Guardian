@@ -189,8 +189,11 @@ async function quotas(){const b=el("quota-btn");b.disabled=true;el("quotas").tex
  }catch(err){empty(el("quotas"),err.message);}
  b.disabled=false;
 }
+async function postLocal(path){if(!lastStatus?.local_action_token){const response=await fetch("/api/status",{cache:"no-store"});if(!response.ok)throw Error("Token local no disponible");lastStatus=await response.json();}
+ return fetch(path,{method:"POST",headers:{"X-Guardian-Token":lastStatus.local_action_token},cache:"no-store"});
+}
 async function windowsProviders(){const b=el("providers-btn");b.disabled=true;el("providers-chart").textContent="Consultando proveedores configurados en Win-CodexBar…";
- try{const r=await fetch("/api/intelligence/windows-providers",{cache:"no-store"}),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
+ try{const r=await postLocal("/api/intelligence/windows-providers"),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
  const host=el("providers-chart");clean(host);if(!v.available){empty(host,v.message||"No se encontró el CLI.");return;}
  if(!v.providers?.length){empty(host,"El CLI no devolvió proveedores habilitados.");return;}
  const grid=asText(host,"div","","");grid.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px";
@@ -208,7 +211,7 @@ async function windowsProviders(){const b=el("providers-btn");b.disabled=true;el
  }catch(err){empty(el("providers-chart"),"Fallo al consultar Win-CodexBar: "+err.message);}finally{b.disabled=false;}
 }
 async function external(){const b=el("ccusage-btn");b.disabled=true;el("external-chart").textContent="Leyendo ccusage local (solo datos agregados)...";
- try{const r=await fetch("/api/intelligence/ccusage",{cache:"no-store"}),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
+ try{const r=await postLocal("/api/intelligence/ccusage"),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
  const host=el("external-chart");clean(host);if(!v.available){empty(host,v.message||"Fuente externa no disponible.");return;}
  const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-days+1);
  const limit=cutoff.toISOString().slice(0,10);
