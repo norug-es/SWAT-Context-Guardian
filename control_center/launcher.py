@@ -12,7 +12,7 @@ import time
 import urllib.request
 import webbrowser
 
-from .server import main as server_main
+from control_center.server import main as server_main
 
 
 def _port(argv: list[str]) -> int:
