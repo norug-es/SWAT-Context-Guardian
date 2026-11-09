@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.0-intelligence (rama experimental)
+
+- Dashboard adicional en /intelligence con heatmaps de calendario y horas, tendencias, composición, rachas, modelos y proyectos.
+- Gráfico del riesgo de contexto de sesiones actuales, sin confundir recientes con procesos activos.
+- API de analítica local con límites de escaneo, deduplicación, cobertura parcial explícita y cache.
+- Adaptador ccusage opcional para costes y agentes; se mantiene separado de los contadores Codex JSONL.
+- Adaptador opcional Win-CodexBar CLI para cuotas multiproveedor, sin importar credenciales.
+- Nuevas regresiones y GitHub Actions de Python y JavaScript. No se han modificado el supervisor, la skill ni los checkpoints originales.
+- Sin instalador nativo ni verificación en Windows real a la fecha; no release estable.
+
 ## v0.3.1 — Identidad y actividad de sesiones
 
 - Consolidación de JSONL repetidos por `session_id`; conserva archivos fuente e historial de mediciones por ruta.
