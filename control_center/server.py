@@ -641,6 +641,11 @@ def create_app(settings: Settings) -> FastAPI:
     async def intelligence_ccusage():
         return await asyncio.to_thread(app.state.intelligence.ccusage_report)
 
+    @app.get('/api/intelligence/windows-providers')
+    async def intelligence_windows_providers():
+        # Invoked only after the user explicitly clicks 'Consultar proveedores'.
+        return await asyncio.to_thread(app.state.intelligence.windows_provider_report)
+
     @app.get('/assets/guardian-banner.png')
     async def banner():
         return FileResponse(PROJECT_ROOT / 'assets' / 'banner-swat-context-guardian.png')
