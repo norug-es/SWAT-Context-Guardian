@@ -86,6 +86,7 @@ class IntelligenceTests(TestCase):
             today = datetime.now(timezone.utc).date().isoformat()
             payload = {"daily": [{"period": today, "agent": "all",
                 "totalTokens": 1000, "totalCost": 0.52,
+                "modelBreakdowns": [{"modelName":"model-test","cost":0.52,"missingPricing":True}],
                 "agents": [
                     {"agent": "codex", "totalTokens": 700, "totalCost": 0.31},
                     {"agent": "hermes", "totalTokens": 300, "totalCost": 0.21}],
@@ -103,6 +104,8 @@ class IntelligenceTests(TestCase):
             self.assertEqual(len(report["agents"]), 2)
             self.assertEqual(report["agents"][0]["name"], "codex")
             self.assertEqual(report["unpriced_models"], ["unlisted"])
+            self.assertEqual(report["models"][0]["cost_usd"], 0.52)
+            self.assertTrue(report["models"][0]["unpriced"])
             self.assertNotIn("/secret", json.dumps(report))
             self.assertEqual(run.call_args.args[0], ["/mock/ccusage", "daily", "--by-agent", "--json"])
 
@@ -120,7 +123,8 @@ class IntelligenceTests(TestCase):
                  "usage": {"primary": {"used_percent": 41.5, "window_minutes": 300,
                     "resets_at": "2026-11-10T12:00:00Z"},
                    "secondary": {"is_informational": True, "used_percent": 0}},
-                 "status": {"level": "operational"}},
+                 "status": {"level": "operational"},
+                 "pace": {"primary": {"stage": "farahead", "deltaPercent": 25.5}}},
                 {"provider": "invalid provider !", "usage": {"primary": {"used_percent": 40}}}
             ]
             class Result:
@@ -137,6 +141,7 @@ class IntelligenceTests(TestCase):
             self.assertEqual(report["providers"][0]["provider"], "claude")
             self.assertEqual(report["providers"][0]["windows"][0]["remaining_percent"], 58.5)
             self.assertEqual(len(report["providers"][0]["windows"]), 1)
+            self.assertEqual(report["providers"][0]["pace"]["delta_percent"], 25.5)
             self.assertNotIn("private@example.com", json.dumps(report))
             self.assertEqual(runner.call_args.args[0],
                              ["/bin/codexbar-cli", "usage", "--json"])
