@@ -33,6 +33,26 @@ Para visualizar datos sintéticos claramente identificados:
 
 La demo no consulta fuentes de pago ni genera nuevos archivos de sesiones.
 
+### Windows portátil sin instalación de Python (beta)
+
+Se ha generado un ejecutable portátil de Windows x64 mediante GitHub Actions y
+**se comprobó que arranca y sirve el dashboard en modo demo en un runner Windows**.
+Este paquete sigue siendo experimental y no está firmado digitalmente.
+
+- Compilación y prueba: https://github.com/norug-es/SWAT-Context-Guardian/actions/runs/42599153564
+- En la sección **Artifacts** descarga **SWAT-Context-Guardian-v0.4-Windows-x64-beta**.
+- **Descomprime el ZIP completo**; NO extraigas solo el .exe, ya que necesita sus librerías y assets.
+- Ejecuta **SWAT-Guardian.exe** como usuario normal. Se inicia en 127.0.0.1:8765 y abre el navegador.
+- El proceso termina cuando cierras su consola. No instala servicios ni tareas de inicio.
+- Para probar sin acceder a sesiones, abre PowerShell en la carpeta extraída:
+
+    .\SWAT-Guardian.exe --demo --port 8766
+
+No combines esta beta con otra instancia en el mismo puerto. Si Windows advierte que
+el binario está sin firmar, comprueba su procedencia y el resultado de CI antes de
+confiar en él. La **compilación en CI no valida** acceso a tus cuentas reales de Codex,
+ccusage o Win-CodexBar, ni sus permisos y versiones en tu máquina.
+
 ### ccusage (opcional)
 
 Instala ccusage desde sus canales oficiales y deja el comando en PATH. Ejemplo si tienes Node.js:
@@ -81,7 +101,7 @@ GitHub Actions verifica las regresiones existentes, los agregados de tokens, san
 
 ## Límites pendientes
 
-No se ha demostrado el seguimiento de todos los subagentes ajenos al App Server, ni un handoff totalmente automático, ni un instalador Windows .exe, ni monitorización de equipos remotos, ni facturación exacta. La demo no sustituye las pruebas reales de Windows y de cuotas de proveedores.
+No se ha demostrado el seguimiento de todos los subagentes ajenos al App Server, ni un handoff totalmente automático, ni un instalador Windows firmado, ni monitorización de equipos remotos, ni facturación exacta. La demo no sustituye las pruebas reales de Windows y de cuotas de proveedores.
 
 ## Licencias
 
