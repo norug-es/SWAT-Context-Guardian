@@ -24,6 +24,10 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
+try:
+    from .intelligence import IntelligenceService
+except ImportError:  # Supports direct diagnostic import.
+    from intelligence import IntelligenceService
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
 
@@ -617,10 +621,25 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.settings = settings
     app.state.csrf_token = secrets.token_urlsafe(32)
     app.state.guardian = GuardianState(settings)
+    app.state.intelligence = IntelligenceService(settings.codex_home, demo=settings.demo)
 
     @app.get('/')
     async def index():
         return FileResponse(STATIC / 'index.html')
+
+    @app.get('/intelligence')
+    async def intelligence_dashboard():
+        return FileResponse(STATIC / 'intelligence.html')
+
+    @app.get('/api/intelligence')
+    async def intelligence(days: int = 90):
+        if not 1 <= days <= 365:
+            raise HTTPException(422, 'El rango permitido es de 1 a 365 días')
+        return await asyncio.to_thread(app.state.intelligence.snapshot, days)
+
+    @app.get('/api/intelligence/ccusage')
+    async def intelligence_ccusage():
+        return await asyncio.to_thread(app.state.intelligence.ccusage_report)
 
     @app.get('/assets/guardian-banner.png')
     async def banner():
