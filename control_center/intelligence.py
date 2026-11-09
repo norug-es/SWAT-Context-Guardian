@@ -342,6 +342,7 @@ class IntelligenceService:
                     break
         rows: list[dict[str, Any]] = []
         agent_totals: dict[str, dict[str, Any]] = {}
+        model_totals: dict[str, dict[str, Any]] = {}
         for raw in collection:
             if not isinstance(raw, dict):
                 continue
@@ -360,6 +361,16 @@ class IntelligenceService:
             if tokens is None and cost is None:
                 continue
             rows.append({"date": day, "tokens": tokens, "cost_usd": cost})
+            models = raw.get("modelBreakdowns")
+            for model in models if isinstance(models, list) else []:
+                if not isinstance(model, dict):
+                    continue
+                name = _safename(model.get("modelName"), "Sin identificar")
+                entry = model_totals.setdefault(name, {"name": name, "cost_usd": None, "unpriced": False})
+                amount = model.get("cost")
+                if isinstance(amount, (int, float)) and not isinstance(amount, bool) and 0 <= amount < 10**10:
+                    entry["cost_usd"] = round((entry["cost_usd"] or 0) + float(amount), 6)
+                entry["unpriced"] = entry["unpriced"] or bool(model.get("missingPricing") is True)
             for agent in raw.get("agents", []) if isinstance(raw.get("agents"), list) else []:
                 if not isinstance(agent, dict):
                     continue
@@ -379,6 +390,7 @@ class IntelligenceService:
                 "message": "Fuente independiente: NO sumar con Codex JSONL",
                 "daily": sorted(rows, key=lambda r: r["date"])[-365:],
                 "agents": sorted(agent_totals.values(), key=lambda x: -x["tokens"]),
+                "models": sorted(model_totals.values(), key=lambda x: -(x["cost_usd"] or 0))[:40],
                 "unpriced_models": unpriced,
                 "rows": len(rows)}
 
@@ -453,8 +465,18 @@ class IntelligenceService:
             kind = raw.get("errorKind")
             kind = kind if kind in ("needsAuthentication", "expiredSession",
                   "localRuntimeOffline", "browserSignInRequired", "timeout", "unknown") else None
+            pace_raw = raw.get("pace") if isinstance(raw.get("pace"), dict) else {}
+            primary_pace = pace_raw.get("primary")
+            pace = None
+            if isinstance(primary_pace, dict):
+                stage = primary_pace.get("stage")
+                delta = primary_pace.get("deltaPercent")
+                if isinstance(stage, str) and 1 <= len(stage) <= 35 and stage.replace("_", "").isalpha():
+                    pace = {"stage": stage}
+                    if isinstance(delta, (int, float)) and not isinstance(delta, bool) and -100 <= delta <= 100:
+                        pace["delta_percent"] = round(float(delta), 2)
             result.append({"provider": provider, "windows": windows,
-                           "status": status, "error_kind": kind})
+                           "status": status, "error_kind": kind, "pace": pace})
         return {"available": True, "source": "Win-CodexBar CLI (proveedores habilitados)",
                 "message": "Cuotas reportadas por cada proveedor; no equivalen a tokens locales",
                 "providers": result}
