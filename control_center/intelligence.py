@@ -6,7 +6,7 @@ derived from Codex JSONL; unlike billing reports, they are not invoice-grade.
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 import json
@@ -139,6 +139,7 @@ def _read_file(path: Path, stat: os.stat_result) -> tuple[str, str, list[tuple[d
                 info = payload.get("info")
                 if not at or not isinstance(info, dict):
                     continue
+                model = _safename(info.get("model"), model)
                 total = _counters(info.get("total_token_usage"))
                 if total:
                     events.append((at, total, model))
@@ -157,6 +158,8 @@ def aggregate_codex(home: Path, days: int = 90) -> dict[str, Any]:
     scanned_bytes = 0
     truncated_files = 0
     errors = 0
+    processed_files = 0
+    event_total = 0
     # Dedup by session/timestamp/counter, even across multiple rollout paths.
     sessions: dict[str, list[tuple[datetime, dict[str, int], str, str]]] = defaultdict(list)
     session_projects: dict[str, str] = {}
@@ -170,13 +173,16 @@ def aggregate_codex(home: Path, days: int = 90) -> dict[str, Any]:
             errors += 1
             continue
         scanned_bytes += used
+        processed_files += 1
         truncated_files += int(truncated)
         if project != "Sin proyecto":
             session_projects[sid] = project
+        available = max(0, MAX_EVENTS - event_total)
+        if len(records) > available:
+            skipped += 1
+        records = records[:available]
+        event_total += len(records)
         for at, counters, model in records:
-            if sum(map(len, sessions.values())) >= MAX_EVENTS:
-                skipped += 1
-                break
             sessions[sid].append((at, counters, model, project))
     day_map: dict[str, dict[str, Any]] = {}
     day_sessions: dict[str, set[str]] = defaultdict(set)
@@ -230,7 +236,7 @@ def aggregate_codex(home: Path, days: int = 90) -> dict[str, Any]:
     projects_safe = [{"name": x["name"], "tokens": x["tokens"], "sessions": len(x["sessions"])}
                      for x in projects.values()]
     total = sum(x["tokens"] for x in daily)
-    coverage = {"files_scanned": len(paths) - max(0, skipped - max(0, len(paths) - MAX_FILES)),
+    coverage = {"files_scanned": processed_files,
                 "files_skipped": skipped, "file_errors": errors,
                 "truncated_files": truncated_files, "bytes_read_approx": scanned_bytes,
                 "partial": bool(skipped or errors or truncated_files),
@@ -309,7 +315,7 @@ class IntelligenceService:
             return {"available": False, "source": "ccusage local",
                     "message": "CLI ccusage no instalada o fuera de PATH", "daily": []}
         try:
-            process = subprocess.run([binary, "daily", "--all", "--json"],
+            process = subprocess.run([binary, "daily", "--by-agent", "--json"],
                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=25,
                      text=True, encoding="utf-8", errors="replace", check=False)
         except (OSError, subprocess.TimeoutExpired):
@@ -323,30 +329,55 @@ class IntelligenceService:
         except ValueError:
             return {"available": False, "source": "ccusage local",
                     "message": "La versión instalada no produjo JSON válido", "daily": []}
-        # Normalize only safe numeric aggregates. Never return raw paths or transcripts.
-        arrays = []
+        # Current unified schema: {"daily": [{"period":"YYYY-MM-DD",
+        # "agents":[...], "totalTokens":N, "totalCost":X}], "totals":{...}}.
+        # Older versions may emit "date" instead of "period".
+        collection: list[Any] = []
         if isinstance(payload, list):
-            arrays.append(payload)
-        if isinstance(payload, dict):
+            collection = payload
+        elif isinstance(payload, dict):
             for key in ("daily", "data", "days"):
                 if isinstance(payload.get(key), list):
-                    arrays.append(payload[key])
-        rows = []
-        for collection in arrays:
-            for raw in collection:
-                if not isinstance(raw, dict):
+                    collection = payload[key]
+                    break
+        rows: list[dict[str, Any]] = []
+        agent_totals: dict[str, dict[str, Any]] = {}
+        for raw in collection:
+            if not isinstance(raw, dict):
+                continue
+            day = raw.get("date") or raw.get("period")
+            if not isinstance(day, str) or len(day) != 10:
+                continue
+            try:
+                date.fromisoformat(day)
+            except ValueError:
+                continue
+            tokens = _number(raw.get("totalTokens", raw.get("total_tokens")))
+            cost_value = raw.get("totalCost", raw.get("costUSD", raw.get("cost")))
+            cost = (round(float(cost_value), 6)
+                    if isinstance(cost_value, (int, float)) and not isinstance(cost_value, bool)
+                    and 0 <= cost_value < 10**10 else None)
+            if tokens is None and cost is None:
+                continue
+            rows.append({"date": day, "tokens": tokens, "cost_usd": cost})
+            for agent in raw.get("agents", []) if isinstance(raw.get("agents"), list) else []:
+                if not isinstance(agent, dict):
                     continue
-                date = raw.get("date")
-                if not isinstance(date, str) or len(date) != 10:
-                    continue
-                tokens = _number(raw.get("totalTokens", raw.get("total_tokens")))
-                cost = raw.get("totalCost", raw.get("costUSD", raw.get("cost")))
-                cost = round(float(cost), 6) if isinstance(cost, (int, float)) and not isinstance(cost, bool) and 0 <= cost < 10**10 else None
-                if tokens is None and cost is None:
-                    continue
-                rows.append({"date": date, "tokens": tokens, "cost_usd": cost,
-                             "source": "ccusage (todos los agentes; incluye Codex)"})
+                name = _safename(agent.get("agent"), "Desconocido")
+                entry = agent_totals.setdefault(name, {"name": name, "tokens": 0,
+                                                        "cost_usd": None})
+                entry["tokens"] += _number(agent.get("totalTokens")) or 0
+                item_cost = agent.get("totalCost")
+                if isinstance(item_cost, (int, float)) and not isinstance(item_cost, bool) and 0 <= item_cost < 10**10:
+                    entry["cost_usd"] = round((entry["cost_usd"] or 0) + float(item_cost), 6)
+        unpriced = []
+        if isinstance(payload, dict) and isinstance(payload.get("totals"), dict):
+            maybe = payload["totals"].get("unpricedModels")
+            if isinstance(maybe, list):
+                unpriced = [_safename(x, "Sin nombre") for x in maybe if isinstance(x, str)][:20]
         return {"available": True, "source": "ccusage CLI local",
                 "message": "Fuente independiente: NO sumar con Codex JSONL",
-                "daily": sorted(rows, key=lambda r: r["date"])[:365],
+                "daily": sorted(rows, key=lambda r: r["date"])[-365:],
+                "agents": sorted(agent_totals.values(), key=lambda x: -x["tokens"]),
+                "unpriced_models": unpriced,
                 "rows": len(rows)}
