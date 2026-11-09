@@ -59,6 +59,7 @@ h1{font-size:clamp(27px,4vw,43px);margin:9px 0 7px;letter-spacing:-1.3px}h2{font
  <section class="card"><div class="heading"><h2>Consumo por proyecto</h2><span class="tag">TOP 12</span></div><div id="projects-chart"></div></section>
  <section class="card"><div class="heading"><div><h2>Estado de sesiones</h2><p style="margin:5px 0 0">Verificación en vivo y actividad reciente</p></div><span class="tag">CONTROL CENTER</span></div><div id="session-state"></div></section>
  <section class="card"><div class="heading"><div><h2>Cuotas de Codex</h2><p style="margin:5px 0 0">Consulta manual al App Server local</p></div><button id="quota-btn" class="btn">Consultar</button></div><div id="quotas"><div class="empty">No se han consultado cuotas.</div></div></section>
+ <section class="card wide"><div class="heading"><div><h2>Cuotas multiproveedor · Win-CodexBar</h2><p style="margin:5px 0 0">Adaptador opcional al CLI instalado. Consulta únicamente los proveedores habilitados y puede acceder a sus servicios cuando pulses el botón.</p></div><button id="providers-btn" class="btn">Consultar proveedores</button></div><div id="providers-chart"><div class="empty">Sin consulta realizada. No se ejecutan conexiones de proveedores automáticamente.</div></div></section>
  <section class="card wide"><div class="heading"><div><h2>Costes y agentes externos</h2><p style="margin:5px 0 0">Adaptador opcional ccusage CLI; fuente separada para evitar doble contabilización</p></div><button id="ccusage-btn" class="btn">Leer ccusage local</button></div><div id="external-chart"><div class="empty">Sin datos externos. Instala ccusage localmente para habilitar este informe.</div></div></section>
 </main>
 <footer class="foot">SWAT Context Guardian · Solo localhost · Sin CDN ni telemetría de terceros · Demo identificada · El coste externo es orientativo, no facturación.</footer>
@@ -177,6 +178,23 @@ async function quotas(){const b=el("quota-btn");b.disabled=true;el("quotas").tex
  }catch(err){empty(el("quotas"),err.message);}
  b.disabled=false;
 }
+async function windowsProviders(){const b=el("providers-btn");b.disabled=true;el("providers-chart").textContent="Consultando proveedores configurados en Win-CodexBar…";
+ try{const r=await fetch("/api/intelligence/windows-providers",{cache:"no-store"}),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
+ const host=el("providers-chart");clean(host);if(!v.available){empty(host,v.message||"No se encontró el CLI.");return;}
+ if(!v.providers?.length){empty(host,"El CLI no devolvió proveedores habilitados.");return;}
+ const grid=asText(host,"div","","");grid.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px";
+ for(const item of v.providers){const card=asText(grid,"div","","");card.style.cssText="border:1px solid #2b455d;border-radius:12px;padding:14px;background:#0c1a2c";
+  const heading=asText(card,"div","","heading");heading.style.marginBottom="10px";asText(heading,"strong",item.provider,"");asText(heading,"span",item.status||item.error_kind||"Sin estado","tag");
+  if(!item.windows.length)asText(card,"p","No se recibieron cuotas porcentuales verificables.");
+  for(const limit of item.windows){const row=asText(card,"div","","quota"),title=asText(row,"div","","quota-top");
+   asText(title,"span",limit.name+(limit.window_minutes?" · "+limit.window_minutes+" min":""),"");
+   asText(title,"strong",limit.remaining_percent+"% restante","");
+   const track=asText(row,"div","","bar-track"),fill=asText(track,"div","","bar-fill");fill.style.width=limit.used_percent+"%";
+   if(limit.resets_at)asText(row,"div","Reinicio informado: "+limit.resets_at,"tiny");
+  }
+ }
+ }catch(err){empty(el("providers-chart"),"Fallo al consultar Win-CodexBar: "+err.message);}finally{b.disabled=false;}
+}
 async function external(){const b=el("ccusage-btn");b.disabled=true;el("external-chart").textContent="Leyendo ccusage local (solo datos agregados)...";
  try{const r=await fetch("/api/intelligence/ccusage",{cache:"no-store"}),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
  const host=el("external-chart");clean(host);if(!v.available){empty(host,v.message||"Fuente externa no disponible.");return;}
@@ -200,7 +218,7 @@ async function external(){const b=el("ccusage-btn");b.disabled=true;el("external
  }catch(err){empty(el("external-chart"),"Error de ccusage: "+err.message);}finally{b.disabled=false;}
 }
 document.querySelectorAll("[data-days]").forEach(btn=>btn.addEventListener("click",()=>{days=Number(btn.dataset.days);document.querySelectorAll("[data-days]").forEach(x=>x.classList.toggle("active",x===btn));reload();}));
-el("reload").onclick=reload;el("quota-btn").onclick=quotas;el("ccusage-btn").onclick=external;
+el("reload").onclick=reload;el("quota-btn").onclick=quotas;el("providers-btn").onclick=windowsProviders;el("ccusage-btn").onclick=external;
 reload();setInterval(reload,60000);
 </script>
 </body></html>
