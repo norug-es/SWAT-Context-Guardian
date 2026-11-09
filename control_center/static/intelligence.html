@@ -190,6 +190,7 @@ async function quotas(){const b=el("quota-btn");b.disabled=true;el("quotas").tex
  b.disabled=false;
 }
 async function postLocal(path){if(!lastStatus?.local_action_token){const response=await fetch("/api/status",{cache:"no-store"});if(!response.ok)throw Error("Token local no disponible");lastStatus=await response.json();}
+ if(!lastStatus.local_action_token)throw Error("Token local no disponible");
  return fetch(path,{method:"POST",headers:{"X-Guardian-Token":lastStatus.local_action_token},cache:"no-store"});
 }
 async function windowsProviders(){const b=el("providers-btn");b.disabled=true;el("providers-chart").textContent="Consultando proveedores configurados en Win-CodexBar…";
