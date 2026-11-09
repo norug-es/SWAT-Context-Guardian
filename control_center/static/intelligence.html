@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark"><title>SWAT Guardian · Intelligence</title>
+<style>
+:root{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color-scheme:dark;--bg:#070e18;--layer:#0d1827;--layer2:#122238;--border:#24364c;--muted:#94a8bc;--text:#eaf7ff;--cyan:#50e0ed;--green:#51d8b2;--amber:#efbf73;--purple:#a897ff;--danger:#ff7e8d}
+*{box-sizing:border-box}body{background:radial-gradient(ellipse at 18% 0,#12385b66,transparent 34%),radial-gradient(ellipse at 95% 15%,#27204866,transparent 32%),var(--bg);color:var(--text);margin:0;min-height:100vh}
+a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}button,select{font:inherit;color:inherit}button{cursor:pointer}.layout{max-width:1500px;margin:auto;padding:25px 28px 58px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:2.5px;color:var(--cyan);text-transform:uppercase}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:clamp(27px,4vw,43px);margin:9px 0 7px;letter-spacing:-1.3px}h2{font-size:18px;letter-spacing:-.35px;margin:0}p{color:var(--muted);font-size:13px;line-height:1.55}
+.actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.btn,.range button{background:#13263b;border:1px solid #35516b;border-radius:10px;padding:10px 14px;color:#d8edfa;font-size:12px;font-weight:650}
+.btn:hover,.range button:hover{border-color:var(--cyan)}.range{display:flex;border:1px solid var(--border);border-radius:12px;padding:4px;gap:4px;background:#091523}
+.range button{padding:8px 11px;background:transparent;border-color:transparent}.range button.active{background:#235072;color:#fff;border-color:#4186ac}
+.line{height:1px;background:var(--border);margin:20px 0}.notice{border:1px solid #30738c;background:#10304277;color:#ccfaff;border-radius:12px;padding:11px 14px;line-height:1.5;font-size:12px;margin-bottom:19px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:16px}.card{border:1px solid var(--border);border-radius:17px;background:linear-gradient(150deg,#102134,#0b1725 65%);box-shadow:0 12px 40px #0002;padding:20px;min-width:0}
+.kpi-title{color:#9eb1c4;font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:1px}.kpi-value{font-size:clamp(22px,3vw,34px);font-weight:750;letter-spacing:-1px;margin:13px 0 7px;font-variant-numeric:tabular-nums}.tiny{font-size:11px;color:var(--muted)}
+.dashboard{display:grid;grid-template-columns:1.55fr 1fr;gap:16px}.wide{grid-column:1/-1}.heading{display:flex;justify-content:space-between;gap:9px;align-items:center;margin-bottom:19px;flex-wrap:wrap}.legend{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:11px}
+.tag{border:1px solid #33516a;border-radius:100px;padding:6px 10px;background:#142a40;color:#a5d9eb;font-size:11px}.chart{width:100%;display:block;min-height:190px}.chart-wrap{overflow:hidden}
+.empty{padding:30px 12px;text-align:center;color:#849aad;font-size:13px;border:1px dashed #294258;border-radius:11px}
+.heat-scroll{overflow-x:auto;padding-bottom:8px}.cal{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,12px);grid-auto-columns:12px;gap:4px;width:max-content;min-height:110px}
+.cell{width:12px;height:12px;border-radius:3px;background:#17283a;border:1px solid #264157}.cell[data-level="1"]{background:#145b70;border-color:#176f86}.cell[data-level="2"]{background:#1d8d9e;border-color:#2999aa}.cell[data-level="3"]{background:#35b0bd;border-color:#4bc6d0}.cell[data-level="4"]{background:#71f3d7;border-color:#a3ffe6}
+.cell.blank{opacity:0;pointer-events:none}.heat-legend{display:flex;gap:5px;align-items:center;margin-top:14px;font-size:11px;color:var(--muted)}.heat-legend .cell{display:inline-block}
+.week-hours{overflow:auto}.hours-grid{display:grid;grid-template-columns:42px repeat(24,minmax(17px,1fr));min-width:600px;gap:4px;align-items:center}
+.hour-label{font-size:10px;color:var(--muted);text-align:center}.hour-cell{height:23px;border-radius:4px;background:#17283a;border:1px solid #264157;min-width:13px}
+.hour-cell[data-level="1"]{background:#145b70}.hour-cell[data-level="2"]{background:#1d8d9e}.hour-cell[data-level="3"]{background:#35b0bd}.hour-cell[data-level="4"]{background:#71f3d7}
+.bar-row{display:grid;grid-template-columns:minmax(110px,35%) 1fr auto;gap:12px;align-items:center;margin-bottom:13px}.bar-name{font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#c9dbea}
+.bar-track{height:9px;border-radius:99px;background:#1c2a3d;overflow:hidden}.bar-fill{height:100%;background:linear-gradient(90deg,#3b86af,#47dbd1);border-radius:99px}.bar-number{font-size:11px;color:#adc3d2;font-variant-numeric:tabular-nums}
+.activity{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid #223145;font-size:12px}.status{height:8px;width:8px;border-radius:50%;background:#62798b}.status.active{background:var(--green);box-shadow:0 0 13px #51d8b2}.status.recent{background:var(--amber)}
+.activity-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.activity-type{color:var(--muted);font-size:10px}
+.quota{padding:11px 0;border-bottom:1px solid #223145}.quota-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:9px}.quota .bar-fill{background:linear-gradient(90deg,#efbf73,#e96d9b)}
+.foot{text-align:center;margin-top:35px;color:#7591a8;font-size:11px;line-height:1.6}
+@media(max-width:1020px){.dashboard{grid-template-columns:1fr}.wide{grid-column:1}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.layout{padding:19px 13px 40px}.kpis{gap:9px}.card{padding:14px}.kpi-value{font-size:24px}.bar-row{grid-template-columns:100px 1fr auto;gap:7px}.actions{width:100%}}
+</style>
+</head>
+<body><div class="layout">
+<header class="top">
+ <div><div class="eyebrow">SWAT / Context Guardian v0.4 · Intelligence</div>
+ <h1>Agent Intelligence <span style="color:#57d9e9">✦</span></h1>
+ <p style="margin:0">Análisis local de tokens, actividad, modelos, proyectos y límites sin leer conversaciones.</p></div>
+ <div class="actions"><a class="btn" href="/">← Control Center</a><div class="range" aria-label="Período"><button data-days="7">7D</button><button data-days="30">30D</button><button data-days="90" class="active">90D</button><button data-days="365">1A</button></div><button id="reload" class="btn">↻ Actualizar</button></div>
+</header>
+<div class="notice" id="source-info">Cargando telemetría... Los contadores JSONL son estimaciones, no una factura. No se suman automáticamente con ccusage.</div>
+<section class="kpis">
+ <div class="card"><div class="kpi-title">Tokens observados</div><div class="kpi-value" id="kpi-tokens">—</div><div class="tiny">Deltas de contadores Codex</div></div>
+ <div class="card"><div class="kpi-title">Sesiones medidas</div><div class="kpi-value" id="kpi-sessions">—</div><div class="tiny">Identificadores únicos</div></div>
+ <div class="card"><div class="kpi-title">Proyectos con datos</div><div class="kpi-value" id="kpi-projects">—</div><div class="tiny">Workspaces con tokens</div></div>
+ <div class="card"><div class="kpi-title">Eventos de consumo</div><div class="kpi-value" id="kpi-events">—</div><div class="tiny">Mediciones con incremento</div></div>
+</section>
+<main class="dashboard">
+ <section class="card wide"><div class="heading"><div><h2>Mapa de calor · actividad diaria</h2><p style="margin:5px 0 0">Intensidad de tokens por día, de izquierda a derecha</p></div><span class="tag" id="heat-range">Últimos 90 días · UTC</span></div><div class="heat-scroll"><div id="calendar" class="cal" role="img" aria-label="Calendario de actividad"></div></div><div class="heat-legend">Menor actividad <span class="cell" data-level="0"></span><span class="cell" data-level="1"></span><span class="cell" data-level="2"></span><span class="cell" data-level="3"></span><span class="cell" data-level="4"></span> Mayor actividad</div></section>
+ <section class="card"><div class="heading"><div><h2>Evolución de consumo</h2><p style="margin:5px 0 0">Tokens diarios · UTC</p></div><span class="tag">SERIE TEMPORAL</span></div><div id="daily-chart" class="chart-wrap"></div></section>
+ <section class="card"><div class="heading"><div><h2>Distribución de tokens</h2><p style="margin:5px 0 0">Entrada, salida y caché incluida en entrada</p></div><span class="tag">COMPOSICIÓN</span></div><div id="composition-chart" class="chart-wrap"></div></section>
+ <section class="card wide"><div class="heading"><div><h2>Mapa de calor · horas y días</h2><p style="margin:5px 0 0">Actividad histórica por hora UTC; no representa procesos actualmente ejecutándose</p></div><span class="tag">7 × 24</span></div><div id="hour-chart" class="week-hours"></div></section>
+ <section class="card"><div class="heading"><h2>Consumo por modelo</h2><span class="tag">TOP 12</span></div><div id="models-chart"></div></section>
+ <section class="card"><div class="heading"><h2>Consumo por proyecto</h2><span class="tag">TOP 12</span></div><div id="projects-chart"></div></section>
+ <section class="card"><div class="heading"><div><h2>Estado de sesiones</h2><p style="margin:5px 0 0">Verificación en vivo y actividad reciente</p></div><span class="tag">CONTROL CENTER</span></div><div id="session-state"></div></section>
+ <section class="card"><div class="heading"><div><h2>Cuotas de Codex</h2><p style="margin:5px 0 0">Consulta manual al App Server local</p></div><button id="quota-btn" class="btn">Consultar</button></div><div id="quotas"><div class="empty">No se han consultado cuotas.</div></div></section>
+ <section class="card wide"><div class="heading"><div><h2>Costes y agentes externos</h2><p style="margin:5px 0 0">Adaptador opcional ccusage CLI; fuente separada para evitar doble contabilización</p></div><button id="ccusage-btn" class="btn">Leer ccusage local</button></div><div id="external-chart"><div class="empty">Sin datos externos. Instala ccusage localmente para habilitar este informe.</div></div></section>
+</main>
+<footer class="foot">SWAT Context Guardian · Solo localhost · Sin CDN ni telemetría de terceros · Demo identificada · El coste externo es orientativo, no facturación.</footer>
+</div>
+<script>
+"use strict";
+const el=id=>document.getElementById(id);
+const fmt=n=>n==null?"—":new Intl.NumberFormat("es-ES",{maximumFractionDigits:0}).format(n);
+const money=n=>n==null?"No disponible":new Intl.NumberFormat("es-ES",{style:"currency",currency:"USD",maximumFractionDigits:2}).format(n);
+const compact=n=>n>=1000000?(n/1000000).toFixed(2)+"M":n>=1000?(n/1000).toFixed(1)+"k":fmt(n);
+const asText=(parent,tag,text,klass)=>{const x=document.createElement(tag);if(klass)x.className=klass;x.textContent=String(text);parent.append(x);return x;};
+const clean=element=>element.replaceChildren();
+const empty=(element,message)=>{clean(element);asText(element,"div",message,"empty");};
+const svgNS="http://www.w3.org/2000/svg";
+let days=90,dataset=null,lastStatus=null;
+function shape(parent,name,attrs,title){const x=document.createElementNS(svgNS,name);for(const [k,v] of Object.entries(attrs))x.setAttribute(k,String(v));if(title){const t=document.createElementNS(svgNS,"title");t.textContent=title;x.append(t);}parent.append(x);return x;}
+function level(value,max){if(!value)return 0;const t=Math.sqrt(value/Math.max(max,1));return Math.max(1,Math.min(4,Math.ceil(4*t)));}
+function calendar(rows){const host=el("calendar");clean(host);if(!rows?.length){empty(host,"Sin registros.");return;}
+ const max=Math.max(...rows.map(x=>x.tokens||0),1);const first=new Date(rows[0].date+"T12:00:00Z").getUTCDay();const offset=(first+6)%7;
+ for(let i=0;i<offset;i++)asText(host,"span","","cell blank");
+ for(const item of rows){const cell=asText(host,"span","","cell");cell.dataset.level=level(item.tokens,max);
+  const title=item.date+" · "+fmt(item.tokens)+" tokens · "+fmt(item.sessions)+" sesiones";
+  cell.title=title;cell.setAttribute("aria-label",title);}
+ el("heat-range").textContent="Últimos "+days+" días · UTC";
+}
+function plot(container,rows,key,color,currency){const host=el(container);clean(host);
+ if(!rows?.length || !rows.some(x=>Number(x[key])>0)){empty(host,"Sin datos medibles para este período.");return;}
+ const w=850,h=220,padL=56,padR=12,padTop=16,padBottom=29;
+ const max=Math.max(...rows.map(x=>Number(x[key])||0),1);const usableW=w-padL-padR,usableH=h-padTop-padBottom;
+ const y=v=>padTop+usableH*(1-(v/max));const x=i=>padL+(rows.length===1?0:i*usableW/(rows.length-1));
+ const svg=document.createElementNS(svgNS,"svg");svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("class","chart");svg.setAttribute("role","img");svg.setAttribute("aria-label",currency?"Coste diario externo":"Evolución de tokens diarios");host.append(svg);
+ for(let i=0;i<=4;i++){const v=max*(4-i)/4, yy=padTop+i*usableH/4;
+   shape(svg,"line",{x1:padL,y1:yy,x2:w-padR,y2:yy,stroke:"#284055","stroke-width":1});
+   const lab=shape(svg,"text",{x:padL-9,y:yy+4,fill:"#90a7bc","font-size":11,"text-anchor":"end"});lab.textContent=currency?"$"+compact(v):compact(v);}
+ const pts=rows.map((r,i)=>[x(i),y(Number(r[key])||0)]);
+ const line=pts.map(p=>p.join(",")).join(" ");
+ shape(svg,"polygon",{points:padL+","+(h-padBottom)+" "+line+" "+pts[pts.length-1][0]+","+(h-padBottom),fill:color,"fill-opacity":".14"});
+ shape(svg,"polyline",{points:line,fill:"none",stroke:color,"stroke-width":2.5,"stroke-linecap":"round","stroke-linejoin":"round"});
+ for(let i=0;i<rows.length;i++){if(rows.length>45 && i%Math.ceil(rows.length/45)!==0)continue;
+   shape(svg,"circle",{cx:x(i),cy:y(Number(rows[i][key])||0),r:3,fill:color,opacity:.8},
+     rows[i].date+" · "+(currency?money(rows[i][key]):fmt(rows[i][key])+" tokens"));}
+ [0,Math.floor((rows.length-1)/2),rows.length-1].forEach(i=>{const label=shape(svg,"text",{x:x(i),y:h-4,fill:"#90a7bc","font-size":11,"text-anchor":"middle"});label.textContent=rows[i].date.slice(5);});
+}
+function composition(rows){const host=el("composition-chart");clean(host);
+ const input=rows.reduce((a,x)=>a+(x.input_tokens||0),0),output=rows.reduce((a,x)=>a+(x.output_tokens||0),0),cached=rows.reduce((a,x)=>a+(x.cached_tokens||0),0);
+ if(!input&&!output){empty(host,"No hay desglose de entrada/salida en los registros disponibles.");return;}
+ const total=input+output;const container=asText(host,"div","","");container.style.cssText="display:flex;align-items:center;justify-content:center;gap:30px;flex-wrap:wrap;padding:4px 0";
+ const svg=document.createElementNS(svgNS,"svg");svg.setAttribute("width","190");svg.setAttribute("height","190");svg.setAttribute("viewBox","0 0 190 190");svg.setAttribute("role","img");svg.setAttribute("aria-label","Proporción entrada y salida");container.append(svg);
+ const r=64,c=2*Math.PI*r;shape(svg,"circle",{cx:95,cy:95,r,fill:"none",stroke:"#25384d","stroke-width":19});
+ shape(svg,"circle",{cx:95,cy:95,r,fill:"none",stroke:"#55cfb5","stroke-width":19,"stroke-dasharray":c*(input/total)+" "+c,"transform":"rotate(-90 95 95)"});
+ shape(svg,"circle",{cx:95,cy:95,r,fill:"none",stroke:"#a897ff","stroke-width":19,"stroke-dasharray":c*(output/total)+" "+c,"stroke-dashoffset":-c*(input/total),"transform":"rotate(-90 95 95)"});
+ const big=shape(svg,"text",{x:95,y:91,fill:"#f0faff","text-anchor":"middle","font-size":23,"font-weight":750});big.textContent=compact(total);
+ const small=shape(svg,"text",{x:95,y:111,fill:"#91adbf","text-anchor":"middle","font-size":11});small.textContent="input + output";
+ const labels=asText(container,"div","","");for(const [name,value,color] of [["Entrada",input,"#55cfb5"],["Salida",output,"#a897ff"],["Caché (incluida)",cached,"#51bdd6"]]){
+  const row=asText(labels,"div","","");row.style.cssText="margin:12px 0;font-size:12px;color:#adc3d2";const dot=asText(row,"span","● ","");dot.style.color=color;
+  asText(row,"span",name+": "+fmt(value),"");
+ }
+}
+function hourHeatmap(rows){const host=el("hour-chart");clean(host);const grid=asText(host,"div","","hours-grid");asText(grid,"div","UTC","hour-label");
+ for(let hour=0;hour<24;hour++)asText(grid,"div",String(hour).padStart(2,"0"),"hour-label");
+ const max=Math.max(1,...rows.map(x=>x.tokens||0));const names=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+ for(let day=0;day<7;day++){asText(grid,"div",names[day],"hour-label");for(let hour=0;hour<24;hour++){
+  const item=rows.find(x=>x.weekday===day && x.hour===hour)||{tokens:0,events:0};
+  const c=asText(grid,"div","","hour-cell");c.dataset.level=level(item.tokens,max);c.title=names[day]+" "+hour+":00 UTC · "+fmt(item.tokens)+" tokens · "+fmt(item.events)+" eventos";
+ }}
+}
+function bars(container,rows,valueKey){const host=el(container);clean(host);if(!rows?.length){empty(host,"No hay desglose disponible.");return;}
+ const max=Math.max(...rows.map(x=>x[valueKey]||0),1);
+ for(const item of rows.slice(0,12)){const row=asText(host,"div","","bar-row");asText(row,"div",item.name||"No identificado","bar-name").title=item.name||"No identificado";
+ const track=asText(row,"div","","bar-track");const fill=asText(track,"div","","bar-fill");fill.style.width=(100*(item[valueKey]||0)/max).toFixed(2)+"%";
+ asText(row,"div",compact(item[valueKey]||0),"bar-number");}
+}
+function sessionStates(value){const host=el("session-state");clean(host);if(!value){empty(host,"No está disponible el estado de las sesiones.");return;}
+ const groups=value.activity_counts||{};for(const [key,name,desc] of [["active","Activas verificadas","App Server conectado"],["recent","Recientes","Sin prueba de ejecución"],["historical","Históricas","Sin actividad reciente confirmada"]]){
+ const row=asText(host,"div","","activity");asText(row,"span","","status "+key);asText(row,"div",name+" · "+fmt(groups[key]||0),"activity-name");asText(row,"span",desc,"activity-type");}
+ const note=asText(host,"p","La actividad reciente no demuestra que un proceso esté ejecutándose.");note.style.marginBottom="0";
+}
+async function reload(){el("reload").disabled=true;el("source-info").textContent="Consultando datos locales…";
+ try{const r=await fetch("/api/intelligence?days="+days,{cache:"no-store"});if(!r.ok)throw Error("HTTP "+r.status);
+ dataset=await r.json();
+ const s=dataset.summary||{},c=dataset.coverage||{};
+ el("kpi-tokens").textContent=compact(s.tokens||0);el("kpi-sessions").textContent=fmt(s.sessions||0);
+ el("kpi-projects").textContent=fmt(s.projects||0);el("kpi-events").textContent=fmt(s.events||0);
+ el("source-info").textContent=dataset.source+" · "+fmt(c.files_scanned||0)+" archivos analizados"+
+  (c.partial?" · COBERTURA PARCIAL ("+fmt(c.files_skipped||0)+" omitidos, "+fmt(c.truncated_files||0)+" truncados).":" · Cobertura dentro del límite.")+
+  " · UTC · Costes no calculados desde JSONL · "+dataset.generated_at;
+ calendar(dataset.calendar);plot("daily-chart",dataset.daily,"tokens","#50dfe7",false);composition(dataset.daily);
+ hourHeatmap(dataset.hours||[]);bars("models-chart",dataset.models||[],"tokens");bars("projects-chart",dataset.projects||[],"tokens");
+ }catch(err){el("source-info").textContent="No fue posible obtener métricas: "+err.message;}
+ try{const r=await fetch("/api/status",{cache:"no-store"});lastStatus=r.ok?await r.json():null;sessionStates(lastStatus);}catch(err){sessionStates(null);}
+ el("reload").disabled=false;
+}
+async function quotas(){const b=el("quota-btn");b.disabled=true;el("quotas").textContent="Consultando Codex App Server…";
+ try{const r=await fetch("/api/codex/account",{cache:"no-store"}),v=await r.json();if(!r.ok)throw Error(v.error||"No disponible");
+ const host=el("quotas");clean(host);asText(host,"div","Plan: "+(v.account?.plan||"sin identificar"),"tiny");
+ if(!(v.rate_limits||[]).length)asText(host,"p","No se recibieron ventanas de cuota.");
+ for(const window of (v.rate_limits||[])){const card=asText(host,"div","","quota"),header=asText(card,"div","","quota-top");
+  asText(header,"span",(window.window_duration_mins||"?")+" minutos","");asText(header,"strong",window.remaining_percent==null?"Sin dato":Math.round(window.remaining_percent)+"% restante","");
+  const track=asText(card,"div","","bar-track"),fill=asText(track,"div","","bar-fill");fill.style.width=Math.min(100,Math.max(0,window.used_percent||0))+"%";}
+ }catch(err){empty(el("quotas"),err.message);}
+ b.disabled=false;
+}
+async function external(){const b=el("ccusage-btn");b.disabled=true;el("external-chart").textContent="Leyendo ccusage local (solo datos agregados)...";
+ try{const r=await fetch("/api/intelligence/ccusage",{cache:"no-store"}),v=await r.json();if(!r.ok)throw Error("HTTP "+r.status);
+ const host=el("external-chart");clean(host);if(!v.available){empty(host,v.message||"Fuente externa no disponible.");return;}
+ const rows=v.daily||[];const costs=rows.filter(x=>x.cost_usd!=null);
+ const top=asText(host,"div","","");top.style.cssText="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:15px";
+ asText(top,"span","Registros diarios: "+fmt(rows.length),"tag");asText(top,"span","Coste agregado informado: "+money(costs.length?costs.reduce((s,x)=>s+x.cost_usd,0):null),"tag");
+ const explanation=asText(host,"p","Fuente independiente con varios agentes, incluido Codex. No se suma al total de JSONL. Los costes son estimaciones del CLI, no cobros verificados.");
+ if(costs.length)plot("external-chart",costs,"cost_usd","#aa9cff",true);
+ else asText(host,"div","Sin costes numéricos disponibles.","empty");
+ }catch(err){empty(el("external-chart"),"Error de ccusage: "+err.message);}finally{b.disabled=false;}
+}
+document.querySelectorAll("[data-days]").forEach(btn=>btn.addEventListener("click",()=>{days=Number(btn.dataset.days);document.querySelectorAll("[data-days]").forEach(x=>x.classList.toggle("active",x===btn));reload();}));
+el("reload").onclick=reload;el("quota-btn").onclick=quotas;el("ccusage-btn").onclick=external;
+reload();setInterval(reload,60000);
+</script>
+</body></html>
