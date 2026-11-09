@@ -1,0 +1,82 @@
+name: SWAT Guardian Intelligence CI
+
+on:
+  push:
+    branches:
+      - feature/context-guardian-v0.4-intelligence
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependencies
+        run: python -m pip install -r control_center/requirements.txt httpx
+      - name: Existing Guardian and intelligence regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Install DOM smoke test dependency
+        run: npm install --no-save --no-package-lock jsdom@26
+      - name: Browserless UI and SVG chart smoke
+        run: node tests/intelligence-ui-smoke.cjs
+      - name: Check frontend JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          html = Path('control_center/static/intelligence.html').read_text(encoding='utf-8')
+          script = html.split('<script>', 1)[1].split('</script>', 1)[0]
+          Path('/tmp/swat-intelligence.js').write_text(script, encoding='utf-8')
+          PY
+          node --check /tmp/swat-intelligence.js
+
+  windows-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: pwsh
+        run: python -m pip install -r control_center/requirements.txt httpx
+      - name: Run Windows regression tests
+        shell: pwsh
+        run: python -m unittest discover -s tests -v
+      - name: Serve demo dashboard and check Intelligence API
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $proc = Start-Process -FilePath python -ArgumentList @('-m', 'control_center.run', '--demo', '--port', '8877') -PassThru -NoNewWindow
+          try {
+            $ready = $false
+            1..25 | ForEach-Object {
+              if (-not $ready) {
+                try {
+                  $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8877/api/health' -TimeoutSec 2
+                  if ($health.ok) { $ready = $true }
+                } catch { Start-Sleep -Seconds 1 }
+              }
+            }
+            if (-not $ready) { throw 'Demo did not become ready on Windows' }
+            $result = Invoke-RestMethod -Uri 'http://127.0.0.1:8877/api/intelligence?days=30'
+            if ($result.mode -ne 'DEMO (simulado)' -or $result.calendar.Count -ne 30) {
+              throw 'Unexpected Intelligence demo payload'
+            }
+            $html = Invoke-WebRequest -Uri 'http://127.0.0.1:8877/intelligence'
+            if ($html.Content -notmatch 'Mapa de calor') { throw 'Heatmap dashboard not served' }
+            Write-Host 'WINDOWS_INTELLIGENCE_SMOKE=PASS'
+          } finally {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          }

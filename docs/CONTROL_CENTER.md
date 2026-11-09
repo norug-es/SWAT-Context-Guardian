@@ -1,5 +1,7 @@
 # SWAT Context Guardian Control Center v0.3.1
 
+> **Complemento experimental v0.4:** el nuevo panel de analítica y calor está disponible en /intelligence. Consulta [INTELLIGENCE_V04.md](INTELLIGENCE_V04.md). Conserva la interfaz y semántica de este documento v0.3.1.
+
 > **MVP local**, de lectura para las sesiones Codex. No requiere credenciales de OpenAI para leer los JSONL. La conexión con `codex app-server` es opcional y experimental. No hay compactación, backups horarios ni handoff automático.
 
 ## Vista del sistema

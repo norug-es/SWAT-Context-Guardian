@@ -33,6 +33,14 @@
 
 ---
 
+### 🧪 v0.4 Intelligence — Rama experimental
+
+**Nueva pantalla en `/intelligence`:** calendario de calor diario, mapa de calor 7×24 horas, tendencias diarias y semanales, rachas, gráficos por modelo/proyecto, distribución input/output/cache y riesgos de contexto. Integra de forma **opcional y bajo demanda** las cuotas de [Win-CodexBar](https://github.com/nesszer/Win-CodexBar) y los costes por agente de [ccusage](https://github.com/ccusage/ccusage). No mezcla fuentes con riesgo de doble conteo.
+
+**Windows portátil beta compilado y probado en CI:** [descargar artefacto desde GitHub Actions](https://github.com/norug-es/SWAT-Context-Guardian/actions/runs/42599153564) → **Artifacts** → `SWAT-Context-Guardian-v0.4-Windows-x64-beta`. Extrae el ZIP completo y ejecuta `SWAT-Guardian.exe` como usuario normal. Sin Python externo; binario aún sin firma ni validación en el equipo del usuario.
+
+**Instalación Windows y limitaciones:** [Guía v0.4 Intelligence](docs/INTELLIGENCE_V04.md). Esta rama no sustituye la release estable v0.3.1; los adaptadores externos requieren sus CLI instaladas y no se ha probado aún en el Windows real del usuario.
+
 ### 🆕 v0.3.1 · Sesiones únicas, estado verificable e historial
 
 - **Un ID de hilo = una sesión** en el panel, incluso cuando varios archivos `rollout-*.jsonl` comparten identificador. Las distintas rutas permanecen en **Ver historial**.
