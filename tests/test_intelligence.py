@@ -166,6 +166,10 @@ class IntelligenceTests(TestCase):
                 self.assertEqual(response.json()["mode"], "DEMO (simulado)")
                 self.assertEqual(len(response.json()["calendar"]), 30)
                 self.assertEqual(client.get("/api/intelligence?days=999").status_code, 422)
-                self.assertFalse(client.get("/api/intelligence/ccusage").json()["available"])
-                self.assertFalse(client.get("/api/intelligence/windows-providers").json()["available"])
+                self.assertEqual(client.get("/api/intelligence/ccusage").status_code, 405)
+                self.assertEqual(client.post("/api/intelligence/windows-providers").status_code, 403)
+                token = client.get("/api/status").json()["local_action_token"]
+                headers = {"X-Guardian-Token": token}
+                self.assertFalse(client.post("/api/intelligence/ccusage", headers=headers).json()["available"])
+                self.assertFalse(client.post("/api/intelligence/windows-providers", headers=headers).json()["available"])
             self.assertFalse(home.exists())
