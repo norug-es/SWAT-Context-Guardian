@@ -30,7 +30,7 @@ async function main(){
           const days=Number(new URL(url,"http://localhost").searchParams.get("days"));
           return makeResponse(makeAnalytics(days));
         }
-        if(url==="/api/status")return makeResponse({activity_counts:{active:1,recent:2,historical:1},
+        if(url==="/api/status")return makeResponse({local_action_token:"test-local-token",activity_counts:{active:1,recent:2,historical:1},
           sessions:[{session_id:"session-abcd",project:"SWAT",percent_approx:76.2,activity_category:"active"}]});
         if(url==="/api/codex/account")return makeResponse({account:{plan:"pro"},
           rate_limits:[{window_duration_mins:300,used_percent:20,remaining_percent:80}]});
