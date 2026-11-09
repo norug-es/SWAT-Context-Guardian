@@ -112,6 +112,42 @@ class IntelligenceTests(TestCase):
         self.assertFalse(report["available"])
         self.assertEqual(report["daily"], [])
 
+    def test_windows_provider_cli_is_opt_in_and_redacts_identity(self):
+        with TemporaryDirectory() as tmp:
+            response = [
+                {"provider": "claude", "source": "oauth",
+                 "account": {"email": "private@example.com"},
+                 "usage": {"primary": {"used_percent": 41.5, "window_minutes": 300,
+                    "resets_at": "2026-11-10T12:00:00Z"},
+                   "secondary": {"is_informational": True, "used_percent": 0}},
+                 "status": {"level": "operational"}},
+                {"provider": "invalid provider !", "usage": {"primary": {"used_percent": 40}}}
+            ]
+            class Result:
+                returncode = 0
+                stdout = json.dumps(response)
+                stderr = ""
+            with patch("control_center.intelligence.shutil.which",
+                       side_effect=[None, "/bin/codexbar-cli"]):
+                with patch("control_center.intelligence.subprocess.run",
+                           return_value=Result()) as runner:
+                    report = IntelligenceService(Path(tmp)).windows_provider_report()
+            self.assertTrue(report["available"])
+            self.assertEqual(len(report["providers"]), 1)
+            self.assertEqual(report["providers"][0]["provider"], "claude")
+            self.assertEqual(report["providers"][0]["windows"][0]["remaining_percent"], 58.5)
+            self.assertEqual(len(report["providers"][0]["windows"]), 1)
+            self.assertNotIn("private@example.com", json.dumps(report))
+            self.assertEqual(runner.call_args.args[0],
+                             ["/bin/codexbar-cli", "usage", "--json"])
+
+    def test_windows_provider_cli_missing_never_executes(self):
+        with patch("control_center.intelligence.shutil.which", return_value=None):
+            with patch("control_center.intelligence.subprocess.run") as runner:
+                report = IntelligenceService(Path(".")).windows_provider_report()
+        self.assertFalse(report["available"])
+        runner.assert_not_called()
+
     def test_api_demo_and_html_are_available_without_real_codex(self):
         with TemporaryDirectory() as tmp:
             home = Path(tmp) / "not-created"
@@ -119,11 +155,12 @@ class IntelligenceTests(TestCase):
                 page = client.get("/intelligence")
                 self.assertEqual(page.status_code, 200)
                 self.assertIn("Mapa de calor", page.text)
-                self.assertIn("hours-chart", page.text.replace("hour-chart", "hours-chart"))
+                self.assertIn("hour-chart", page.text)
                 response = client.get("/api/intelligence?days=30")
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.json()["mode"], "DEMO (simulado)")
                 self.assertEqual(len(response.json()["calendar"]), 30)
                 self.assertEqual(client.get("/api/intelligence?days=999").status_code, 422)
                 self.assertFalse(client.get("/api/intelligence/ccusage").json()["available"])
+                self.assertFalse(client.get("/api/intelligence/windows-providers").json()["available"])
             self.assertFalse(home.exists())
