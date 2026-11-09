@@ -35,3 +35,44 @@ jobs:
           Path('/tmp/swat-intelligence.js').write_text(script, encoding='utf-8')
           PY
           node --check /tmp/swat-intelligence.js
+
+  windows-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        shell: pwsh
+        run: python -m pip install -r control_center/requirements.txt httpx
+      - name: Run Windows regression tests
+        shell: pwsh
+        run: python -m unittest discover -s tests -v
+      - name: Serve demo dashboard and check Intelligence API
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $proc = Start-Process -FilePath python -ArgumentList @('-m', 'control_center.run', '--demo', '--port', '8877') -PassThru -NoNewWindow
+          try {
+            $ready = $false
+            1..25 | ForEach-Object {
+              if (-not $ready) {
+                try {
+                  $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8877/api/health' -TimeoutSec 2
+                  if ($health.ok) { $ready = $true }
+                } catch { Start-Sleep -Seconds 1 }
+              }
+            }
+            if (-not $ready) { throw 'Demo did not become ready on Windows' }
+            $result = Invoke-RestMethod -Uri 'http://127.0.0.1:8877/api/intelligence?days=30'
+            if ($result.mode -ne 'DEMO (simulado)' -or $result.calendar.Count -ne 30) {
+              throw 'Unexpected Intelligence demo payload'
+            }
+            $html = Invoke-WebRequest -Uri 'http://127.0.0.1:8877/intelligence'
+            if ($html.Content -notmatch 'Mapa de calor') { throw 'Heatmap dashboard not served' }
+            Write-Host 'WINDOWS_INTELLIGENCE_SMOKE=PASS'
+          } finally {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          }
